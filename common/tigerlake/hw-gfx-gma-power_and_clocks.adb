@@ -119,9 +119,43 @@ package body HW.GFX.GMA.Power_And_Clocks is
 	   when others => PLL_Ratio := 0;
 	end case;
      end Get_Cdclk;
+
      CDClk : constant Config.CDClk_Range :=
        Normalize_CDClk (Frequency_Type'Min (CDClk_In, Config.Max_CDClk));
      Success : Boolean;
+     
+     type DRAM_Module_Type is (DDR4, DDR5, LPDDR4, LPDDR5);
+     type Bw_Buddy_Info is record
+	DRAM_Channels : Natural;
+	DRAM_Type     : DRAM_Module_Type;
+	BW_BUDDY_MASK : Word32;
+     end record;
+     type Bw_Buddy_Info_Array is array (Natural range 8) of Bw_Buddy_Info;
+     Bw_Buddy_Info : constant Bw_Buddy_Info_Array := 
+       (0 => (DRAM_Channels => 1,
+	      DRAM_Type     => DDR4,
+	      BW_BUDDY_MASK => 0xf),
+	1 => (DRAM_Channels => 1,
+	      DRAM_Type     => DDR5,
+	      BW_BUDDY_MASK => 0xf),
+	2 => (DRAM_Channels => 2,
+	      DRAM_Type     => LPDDR4,
+	      BW_BUDDY_MASK => 0x1c),
+	3 => (DRAM_Channels => 2,
+	      DRAM_Type     => LPDDR5,
+	      BW_BUDDY_MASK => 0x1c),
+	4 => (DRAM_Channels => 2,
+	      DRAM_Type     => DDR4,
+	      BW_BUDDY_MASK => 0x1f),
+	5 => (DRAM_Channels => 2,
+	      DRAM_Type     => DDR5,
+	      BW_BUDDY_MASK => 0x1e),
+	6 => (DRAM_Channels => 4,
+	      DRAM_Type     => LPDDR4,
+	      BW_BUDDY_MASK => 0x38),
+	7 => (DRAM_Channels => 4,
+	      DRAM_Type     => LPDDR5,
+	      BW_BUDDY_MASK => 0x38));
    is
       begin
 	 
@@ -188,13 +222,48 @@ package body HW.GFX.GMA.Power_And_Clocks is
       PD_On (PG1);
      
       -- Enable CD Clock following Sequences for Changing CD Clock Frequency
-      
+      Get_Cur_CDClk (Config.CDClk);
+      Get_Max_CDClk (Config.Max_CDClk);
+      Set_CDClk (Config.Default_CDClk_Freq);
+      Get_Raw_Clock (Config.Raw_Clock);
+  
       -- Enable first DBUF
       --    set DBUF_CTL_<first_DBUF> DBUF Power Request = 1b
+      Registers.Set_Mask
+        (Register    => Registers.DBUF_CTL,
+         Mask        => DBUF_CTL_DBUF_POWER_REQUEST);
       --    poll for DBUF Power State = 1b (10us)
-      
+      Registers.Wait_Set_Mask
+        (Register    => Registers.DBUF_CTL,
+         Mask        => DBUF_CTL_DBUF_POWER_STATE);
+
       -- Setup MBUS
+      --    in ABOX, set BT Credits Pool 1 to 16
+      --             set BT Credits Pool 2 to 16
+      --             set B Credits to 1
+      --             set BW Credits to 1
+      Registers.Set_Mask 
+	(Register => Registers.MBUS_ABOX_CTL,
+	 Value => 0);
+      --    in DBUF, set Tracker State Service to 8
+      Registers.Set_Mask
+	(Register => Registers.MBUS_DBOX_CTL,
+	 Value => 0);
       
       -- Program BW_BUDDY registers
+      --   Requires knowing the DRAM type & channel count
+      for Buddy in Bw_Buddy_Info loop
+	 if DRAM_Info.Num_Channels = Buddy.DRAM_Channels and
+	   DRAM_Info.DRAM_Type = Buddy.DRAM_Type
+	 then
+	    Registers.Set_Mask
+	      (Register => Registers.BW_BUDDY1_PAGE_MASK,
+	       Mask     => Buddy.BW_BUDDY_MASK);
+	    Registers.Set_Mask
+	      (Register => Registers.BW_BUDDY2_PAGE_MASK,
+	       Mask     => Buddy.BW_BUDDY_MASK);
+	 end if;
+      end loop;
+      
    end Initialize;
 end HW.GFX.GMA.Power_And_Clocks;

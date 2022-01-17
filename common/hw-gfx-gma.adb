@@ -474,7 +474,7 @@ is
                Registers.Read (Registers.G4X_AUD_VID_DID, Audio_VID_DID);
             when Ironlake =>
                Registers.Read (Registers.PCH_AUD_VID_DID, Audio_VID_DID);
-            when Haswell .. Skylake =>
+            when Haswell .. Tigerlake =>
                Registers.Read (Registers.AUD_VID_DID, Audio_VID_DID);
          end case;
          Success :=

@@ -758,7 +758,12 @@ is
       BXT_PORT_PCS_DW12_GRP_A,
       BXT_PORT_TX_DW2_GRP_A,
       BXT_PORT_TX_DW3_GRP_A,
-      BXT_PORT_TX_DW4_GRP_A);
+      BXT_PORT_TX_DW4_GRP_A,
+      PORT_COMP_DW0_A,
+      PORT_COMP_DW0_B,
+      PORT_COMP_DW0_C,
+      PHY_MISC_A,
+      PHY_MISC_B);
 
    pragma Warnings
      (GNATprove, Off, "pragma ""KEEP_NAMES"" ignored *(not yet supported)",
@@ -1649,7 +1654,16 @@ is
 
       GMCH_CLKCFG           => 16#01_0c00# / Register_Width,
       GMCH_HPLLVCO_MOBILE   => 16#01_0c0f# / Register_Width,
-      GMCH_HPLLVCO          => 16#01_0c38# / Register_Width);
+      GMCH_HPLLVCO          => 16#01_0c38# / Register_Width,
+      
+      -- TGL Combo Phy 
+      
+      PORT_COMP_DW0_A       => 16#16_2100# / Register_Width,
+      PORT_COMP_DW0_B       => 16#06_c100# / Register_Width,
+      PORT_COMP_DW0_C       => 16#16_0100# / Register_Width,
+      
+      PHY_MISC_A            => 16#06_4c00# / Register_Width,
+      PHY_MISC_B            => 16#06_4c04# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..

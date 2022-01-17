@@ -45,7 +45,8 @@ is
       Broadwell,
       Broxton,
       Skylake,
-      Kabylake);
+      Kabylake,
+      Tigerlake);
 
    type CPU_Variant is (Normal, ULT, ULX);
 
@@ -55,7 +56,8 @@ is
       Cougar_Point,     -- Panther Point compatible
       Lynx_Point,       -- Wildcat Point compatible
       Sunrise_Point,    -- Union Point compatible
-      Cannon_Point);
+      Cannon_Point,
+      Tiger_Point);
 
    type Port_Type is
      (Disabled,

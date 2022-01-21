@@ -17,6 +17,7 @@ package body HW.GFX.GMA.Combo_Phy is
    PHY_MISC_DE_TO_IO_COMP_PWR_DOWN	: constant := 1 * 2 ** 23;
    PORT_TX_DW8_ODCC_CLKSEL		: constant := 1 * 2 ** 31;
    PORT_TX_DW8_ODCC_DIV_SEL_MASK	: constant := 3 * 2 ** 29;
+   PORT_COMP_DW8_IREFGEN		: constant := 1 * 2 ** 24;
 
    type Regs is array (Combo_Phy) of Registers.Registers_Index;
    PHY_MISC : constant Regs := Regs'

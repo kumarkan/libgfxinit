@@ -20,6 +20,11 @@ package body HW.GFX.GMA.Power_And_Clocks is
    subtype Power_Well is Power_Domain;
    subtype Dynamic_Domain is Power_Domain range PG1 .. PG5;
    
+   NDE_RSTWRN_OPT_RST_PCH_Handshake_En : constant := 1 * 2 **  4;
+
+   FUSE_STATUS_DOWNLOAD_STATUS         : constant := 1 * 2 ** 31;
+   FUSE_STATUS_PG0_DIST_STATUS         : constant := 1 * 2 ** 27;
+   
    constant CDCLK_CTL_CD_FREQ_SELECT_168_MHZ : 2#00101001110#;
    constant CDCLK_CTL_CD_FREQ_SELECT_172_MHZ : 2#00101011000#;
    constant CDCLK_CTL_CD_FREQ_SELECT_179_MHZ : 2#00101100100#;
@@ -75,7 +80,37 @@ package body HW.GFX.GMA.Power_And_Clocks is
       end if;
    end PD_On;
    
-   
+   procedure PD_Off (PD : Power_Domain)
+   is
+      Ctl1, Ctl2, Ctl3, Ctl4 : Word32;
+   begin
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      
+      Registers.Read (Registers.PWR_WELL_CTL_BIOS, Ctl1);
+      Registers.Read (Registers.PWR_WELL_CTL_DRIVER, Ctl2);
+      Registers.Read (Registers.PWR_WELL_CTL_KVMR, Ctl3);
+      Registers.Read (Registers.PWR_WELL_CTL_DEBUG, Ctl4);
+      
+      if ((Ctl1 or Ctl2 or Ctl3 or Ctl4) and
+          PWR_WELL_CTL_POWER_REQUEST (PD)) /= 0
+      then
+         Registers.Wait_Set_Mask
+           (Register => Registers.PWR_WELL_CTL_DRIVER,
+            Mask     => PWR_WELL_CTL_POWER_STATE (PD));
+      end if;
+
+      if (Ctl1 and PWR_WELL_CTL_POWER_REQUEST (PD)) /= 0 then
+         Registers.Unset_Mask
+           (Register => Registers.PWR_WELL_CTL_BIOS,
+            Mask     => PWR_WELL_CTL_POWER_REQUEST (PD));
+      end if;
+
+      if (Ctl2 and PWR_WELL_CTL_POWER_REQUEST (PD)) /= 0 then
+         Registers.Unset_Mask
+           (Register => Registers.PWR_WELL_CTL_DRIVER,
+            Mask     => PWR_WELL_CTL_POWER_REQUEST (PD));
+      end if;
+   end PD_Off;
    
    procedure Set_CDClk (CDClk_In : Frequency_Type)
      procedure Get_Cdclk (Refclk : Frequency_Type;

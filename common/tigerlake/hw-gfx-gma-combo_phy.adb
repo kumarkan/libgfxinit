@@ -18,40 +18,35 @@ package body HW.GFX.GMA.Combo_Phy is
    PORT_TX_DW8_ODCC_CLKSEL		: constant := 1 * 2 ** 31;
    PORT_TX_DW8_ODCC_DIV_SEL_MASK	: constant := 3 * 2 ** 29;
    PORT_COMP_DW8_IREFGEN		: constant := 1 * 2 ** 24;
-
+   PORT_COMP_DW1_REF_MASK               : constant := 
+    -- not (shift_right(16#ff#, 16) or 16#ff)
+				       Unset_Mask => PORT_COMP_DW1_REF_MASK,
+   
    type Regs is array (Combo_Phy) of Registers.Registers_Index;
    PHY_MISC : constant Regs := Regs'
      (PHY_A => Registers.PHY_MISC_A,
       PHY_B => Registers.PHY_MISC_B);
-
    PORT_CL_DW5 : constant Regs := Regs'
      (PHY_A => Registers.PORT_CL_DW5_A,
       PHY_B => Registers.PORT_CL_DW5_B);
-
    PORT_COMP_DW0 : constant Regs := Regs'
      (PHY_A => Registers.PORT_COMP_DW0_A,
       PHY_B => Registers.PORT_COMP_DW0_B);
-
    PORT_COMP_DW1 : constant Regs := Regs'
      (PHY_A => Registers.PORT_COMP_DW1_A,
       PHY_B => Registers.PORT_COMP_DW1_B);
-
    PORT_COMP_DW3 : constant Regs := Regs'
      (PHY_A => Registers.PORT_COMP_DW3_A,
       PHY_B => Registers.PORT_COMP_DW3_B);
-
    PORT_TX_DW8_LN0 : constant Regs := Regs'
      (PHY_A => Registers.PORT_TX_DW8_LN0_A,
       PHY_B => Registers.PORT_TX_DW8_LN0_B);
-
    PORT_TX_DW8_GRP0 : constant Regs := Regs'
      (PHY_A => Registers.PORT_TX_DW8_GRP0_A,
       PHY_B => Registers.PORT_TX_DW8_GRP0_B);
-
    PORT_PCS_DW1_LN0 : constant Regs := Regs'
      (PHY_A => Registers.PORT_PCS_DW1_LN0_A,
       PHY_B => Registers.PORT_PCS_DW1_LN0_B);
-
    PORT_PCS_DW1_GRP0 : constant Regs := Regs'
      (PHY_A => Registers.PORT_PCS_DW1_GRP0_A,
       PHY_B => Registers.PORT_PCS_DW1_GRP0_B);
@@ -128,19 +123,17 @@ package body HW.GFX.GMA.Combo_Phy is
 	    VOLTAGE_MASK : constant := 3 * 2 ** 24;
 	 begin
 	    Registers.Read (Register => PORT_COMP_DW3 (Phy), DW3);
-	    Tmp := DW3 and VOLTAGE_MASK;
-	    case Tmp is
+	    case (DW3 and VOLTAGE_MASK) is
 	       when 16#0000_0000# => Voltage := ZERO_85_V;
 	       when 16#0100_0000# => Voltage := ZERO_95_V;
 	       when 16#0200_0000# => Voltage := ONE_05_V;
 	       when others        => Voltage := ZERO_85_V;
 	    end case;
 
-	    Tmp := DW3 and PROCESS_MASK;
-	    case Tmp is
+	    case (DW3 and PROCESS_MASK) is
 	       when 16#0400_0000# => Process := DOT0;
 	       when 16#0800_0000# => Process := DOT1;
-	       when others =>        Process := DOT0;
+	       when others        => Process := DOT0;
 	    end case;
 
 	    if Process = DOT0 then
@@ -191,7 +184,7 @@ package body HW.GFX.GMA.Combo_Phy is
 	 --   Program procmon reference values in PORT_COMP_DW{1,9,10}
 	 Config_Procmon_Reference (Phy);
 
-	 --   If this PHY is a comp source, set DW8 irefgen to 1
+	 --   If this PHY is a compensation source, set DW8 irefgen to 1
 	 if Phy_Is_Master (Phy) then
 	    Registers.Set_Mask (Register => PORT_COMP_DW8 (Phy),
 				Set_Mask => PORT_COMP_DW8_IREFGEN); -- 1 * 2 ** 24

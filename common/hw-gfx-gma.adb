@@ -489,7 +489,8 @@ is
             (Config.CPU_Ironlake       and Audio_VID_DID = 16#0000_0000#) or
             (Config.Gen_G45            and (Audio_VID_DID = 16#8086_2801# or
                                             Audio_VID_DID = 16#8086_2802# or
-                                            Audio_VID_DID = 16#8086_2803#)));
+                                            Audio_VID_DID = 16#8086_2803#)) or
+            (Config.CPU_Tigerlake      and (Audio_VID_DID = 16#8086_2812#)));	
       end Check_Platform;
 
       procedure Check_Platform_PCI (Success : out Boolean)

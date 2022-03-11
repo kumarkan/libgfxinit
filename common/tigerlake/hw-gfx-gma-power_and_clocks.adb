@@ -334,7 +334,7 @@ package body HW.GFX.GMA.Power_And_Clocks is
 	   16 * MBUS_ABOX_CTL_BT_CREDITS_POOL2_SHIFT);
       
       -- Program BW_BUDDY registers
-      Configure_Bw_Buddy_Info ();
+      Configure_Bw_Buddy_Info;
             
    end Initialize;
 end HW.GFX.GMA.Power_And_Clocks;

@@ -267,11 +267,14 @@ private
    ----------------------------------------------------------------------------
    -- Internal representation of a single pipe's configuration
 
-   type GPU_Port is (DIGI_A, DIGI_B, DIGI_C, DIGI_D, DIGI_E, LVDS, VGA);
+   type GPU_Port is (DIGI_A, DIGI_B, DIGI_C, DIGI_D, DIGI_E, LVDS, VGA,	
+    TYPE_C_1, TYPE_C_2, TYPE_C_3, TYPE_C_4, TBT1);
 
    subtype Digital_Port is GPU_Port range DIGI_A .. DIGI_E;
    subtype GMCH_DP_Port is GPU_Port range DIGI_B .. DIGI_D;
-   subtype GMCH_HDMI_Port is GPU_Port range DIGI_B .. DIGI_C;
+   subtype GMCH_HDMI_Port is GPU_Port range DIGI_B .. DIGI_C;	
+   subtype Type_C_Port is GPU_Port range TYPE_C_1 .. TYPE_C_4;	
+   subtype TBT_Port is GPU_Port range TBT1;
 
    type PCH_Port is
      (PCH_DAC, PCH_LVDS,

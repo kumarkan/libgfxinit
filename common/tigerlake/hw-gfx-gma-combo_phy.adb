@@ -52,7 +52,7 @@ package body HW.GFX.GMA.Combo_Phy is
       PHY_B => Registers.PORT_PCS_DW1_GRP0_B);
 
    -- N.B. Several Combo PHY registers come in individual lane registers and
-   -- also a group registers. The group register is used exclusively for
+   -- also group registers. The group register is used exclusively for
    -- programming all of the lane registers with the same value. Reads from
    -- group address are indeterminate, so read from a single lane, then write to
    -- the group.

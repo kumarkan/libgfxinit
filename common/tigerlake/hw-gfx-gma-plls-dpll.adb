@@ -163,9 +163,9 @@ package body HW.GFX.GMA.PLLs.DPLL is
 	  QDiv_Ratio => 0));
 		
    procedure On
-     (PLL          : in Configurable_DPLLs
-        Port_Cfg     : in Port_Config;
-      Sucess : out Boolean)
+     (PLL          : in Configurable_DPLLs;
+      Port_Cfg     : in Port_Config;
+      Success : out Boolean)
    is
       DCO_Freq : DCO_Frequency;	
       PDiv : PDiv_Range;	
@@ -184,7 +184,7 @@ package body HW.GFX.GMA.PLLs.DPLL is
    begin       
       Calculate_DPLL	
        (Port_Cfg.Mode.Dotclock, KDiv, PDiv, QDiv, QDiv_Mode, QDiv_Ratio, Success);	
-      If not Success then	      
+      if not Success then	      
          return;
       end if;
        

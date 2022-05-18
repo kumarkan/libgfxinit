@@ -129,3 +129,76 @@ is
       -- Read AUX data register
       -- Clear status flags
    end Enable_Aux;
+
+   procedure Initialize
+   is
+      subtype Ext_Digital_Port is
+         Digital_Port range DIGI_B .. DIGI_I;
+      Internal_Detected : Boolean;
+      DDI_Detected : Boolean;
+      TypeC_Detected : Boolean;
+   begin
+      -- DDI_A
+      if Config.Has_Presence_Straps and not Config.Ignore_Presence_Straps then
+         Registers.Is_Set_Mask
+           (Register => Registers.DDI_BUF_CTL,
+            Mask     => DDI_PORT_DETECTED (DIGI_A),
+	    Result   => Internal_Detected);
+      else
+         Internal_Detected := False;
+      end if;
+
+      if Internal_Detected then
+         Registers.Unset_And_Set_Mask
+	   (Register => Registers.SHOTPLUG_CTL,
+               Mask_Unset  => SHOTPLUG_CTL_DETECT_MASK,
+               Mask_Set    => SHOTPLUG_CTL_HPD_INPUT_ENABLE (DIGI_A) or
+                              SHOTPLUG_CTL_HPD_STATUS (DIGI_A));  -- clear
+      end if;
+      Config.Valid_Port (eDP) := Internal_Detected;
+
+      for Port in Ext_Digital_Port range DIGI_B .. DIGI_C loop
+         if 
+
+   end Initialize;
+
+   end Hotplug_Detect (Port : Active_Port_Type; Detected : out Boolean)
+   is
+      GPU_Port : constant GMA.GPU_Port :=
+         Config_Helpers.To_GPU_Port (Primary, Port);
+   begin
+      -- DDI_[ABC]
+      if GPU_Port in DIGI_A .. DIGI_C then
+         Registers.Read (Registers.SHOTPLUG_CTL, Ctl32, Verbose => False);
+	 Detected := (Ctl32 and SHOTPLUG_CTL_LONG_DETECT (GPU_Port)) /= 0;
+
+         if (Ctl32 and SHOTPLUG_CTL_HPD_STATUS (GPU_Port)) /= 0 then
+	    Registers.Unset_And_Set_Mask
+	      (Register => Registers.SHOTPLUG_CTL,
+               Mask_Unset  => SHOTPLUG_CTL_DETECT_MASK,
+               Mask_Set    => SHOTPLUG_CTL_HPD_STATUS (GPU_Port));
+	 end if;
+      -- TypeC_1..6
+      elsif GPU_Port in DIGI_D .. DIGI_I then
+         Registers.Read (Registers.TC_HOTPLUG_CTL, Ctl32);
+	 Detected := (Ctl32 and TC_HOTPLUG_CTL_LONG_DETECT (GPU_Port)) /= 0;
+
+         Registers.Set_Mask
+	   (Regster => Registers.TC_HOTPLUG_CTL,
+	    Mask => TC_HOTPLUG_CTL_LONG_DETECT (GPU_Port));
+      else
+         Detected := False;
+      end if;
+      -- TODO: thunderbolt
+   end Hotplug_Detect;
+
+   procedure Clear_Hotplug_Detect (Port : Active_Port_Type)
+   is
+      Ignored_HPD : Boolean;
+   begin
+      pragma Warnings (GNATprove, Off, "unused assignment to ""Ignored_HPD""",
+                       Reason => "We want to clear pending events only");
+      Port_Detect.Hotplug_Detect (Port, Ignored_HPD);
+      pragma Warnings (GNATprove, On, "unused assignment to ""Ignored_HPD""");
+   end Clear_Hotplug_Detect;
+end HW.GFX.GMA.Port_Detect;

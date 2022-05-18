@@ -22,14 +22,16 @@ private package HW.GFX.GMA.Config is
          when Ironlake  => Ironlake,
          when Haswell   => Haswell,
          when Broxton   => Broxton,
-         when Skylake   => Skylake);
+         when Skylake   => Skylake,
+	 when Tigerlake => Tigerlake);
    CPU_Last : constant CPU_Type :=
      (case Gen is
          when G45       => GM45,
          when Ironlake  => Ivybridge,
          when Haswell   => Broadwell,
          when Broxton   => Broxton,
-         when Skylake   => Kabylake);
+         when Skylake   => Kabylake,
+	 when Tigerlake => Tigerlake);
    CPU_Var_Last : constant CPU_Variant :=
      (case Gen is
          when Haswell | Skylake  => ULX,
@@ -47,14 +49,16 @@ private package HW.GFX.GMA.Config is
          when Ironlake  => Ibex_Peak,
          when Haswell   => Lynx_Point,
          when Broxton   => No_PCH,
-         when Skylake   => Sunrise_Point);
+         when Skylake   => Sunrise_Point,
+	 when Tigerlake => Tiger_Point);
    PCH_Last : constant PCH_Type :=
      (case Gen is
          when G45       => No_PCH,
          when Ironlake  => Cougar_Point,
          when Haswell   => Lynx_Point,
          when Broxton   => No_PCH,
-         when Skylake   => Cannon_Point);
+         when Skylake   => Cannon_Point,
+	 when Tigerlake => Tiger_Point);
    subtype Gen_PCH_Type is PCH_Type range PCH_First .. PCH_Last;
 
    PCH : constant Gen_PCH_Type := <<PCH>>;
@@ -170,6 +174,8 @@ private package HW.GFX.GMA.Config is
      ((Gen_Ironlake and then PCH >= Cougar_Point) or Haswell_On);
    Cannon_Point_On   : <genbool> := Skylake_On and then PCH >= Cannon_Point;
 
+   Tiger_Point_On    : <genbool> := Tigerlake_On and then PCH >= Tiger_Point;
+
    ----------------------------------------------------------------------------
 
    Have_HDMI_Buf_Override  : constant Boolean := DDI_HDMI_Buffer_Translation >= 0;
@@ -281,6 +287,9 @@ private package HW.GFX.GMA.Config is
 
    ----------- GTT: -------------
    Has_64bit_GTT                 : <hswbool> := Broadwell_On;
+
+   ----------- TypeC: -----------
+   Has_TypeC_Connectors          : <genbool> := Tigerlake_On;
 
    ----------------------------------------------------------------------------
 

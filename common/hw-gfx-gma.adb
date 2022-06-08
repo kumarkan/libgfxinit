@@ -65,7 +65,13 @@ is
       HDMI1    => "HDMI1   ",
       HDMI2    => "HDMI2   ",
       HDMI3    => "HDMI3   ",
-      Analog   => "Analog  ");
+      Analog   => "Analog  ",
+      USBC1    => "USBC 1  ",
+      USBC2    => "USBC 2  ",
+      USBC3    => "USBC 3  ",
+      USBC4    => "USBC 4  ",
+      USBC5    => "USBC 5  ",
+      USBC6    => "USBC 6  ");
 
    package Dev is new HW.PCI.Dev (PCI.Address'(0, 2, 0));
 
@@ -474,7 +480,7 @@ is
                Registers.Read (Registers.G4X_AUD_VID_DID, Audio_VID_DID);
             when Ironlake =>
                Registers.Read (Registers.PCH_AUD_VID_DID, Audio_VID_DID);
-            when Haswell .. Skylake =>
+            when Haswell .. Tigerlake =>
                Registers.Read (Registers.AUD_VID_DID, Audio_VID_DID);
          end case;
          Success :=
@@ -489,7 +495,8 @@ is
             (Config.CPU_Ironlake       and Audio_VID_DID = 16#0000_0000#) or
             (Config.Gen_G45            and (Audio_VID_DID = 16#8086_2801# or
                                             Audio_VID_DID = 16#8086_2802# or
-                                            Audio_VID_DID = 16#8086_2803#)));
+                                            Audio_VID_DID = 16#8086_2803#)) or
+            (Config.CPU_Tigerlake      and (Audio_VID_DID = 16#8086_2812#)));
       end Check_Platform;
 
       procedure Check_Platform_PCI (Success : out Boolean)

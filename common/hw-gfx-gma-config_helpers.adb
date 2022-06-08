@@ -36,7 +36,8 @@ is
                    when HDMI1 | DP1  => DIGI_B,
                    when HDMI2 | DP2  => DIGI_C,
                    when HDMI3 | DP3  => DIGI_D,
-                   when Analog       => VGA),
+                   when Analog       => VGA,
+                   when others       => DIGI_A), -- n/a, actually
             when Ironlake =>           -- everything but eDP through FDI/PCH
               (if Port = eDP then
                   DIGI_A
@@ -52,7 +53,8 @@ is
                   when HDMI1 | DP1  => DIGI_B,
                   when HDMI2 | DP2  => DIGI_C,
                   when HDMI3 | DP3  => DIGI_D,
-                  when Analog       => DIGI_E));
+                  when Analog       => DIGI_E,
+                  when others       => LVDS));  -- n/a, actually
    end To_GPU_Port;
 
    function To_PCH_Port (Port : Active_Port_Type) return PCH_Port
@@ -68,7 +70,13 @@ is
             when HDMI3     => PCH_HDMI_D,
             when DP1       => PCH_DP_B,
             when DP2       => PCH_DP_C,
-            when DP3       => PCH_DP_D);
+            when DP3       => PCH_DP_D,
+            when USBC1     => PCH_LVDS,   -- n/a, actually
+            when USBC2     => PCH_LVDS,   -- n/a, actually
+            when USBC3     => PCH_LVDS,   -- n/a, actually
+            when USBC4     => PCH_LVDS,   -- n/a, actually
+            when USBC5     => PCH_LVDS,   -- n/a, actually
+            when USBC6     => PCH_LVDS);  -- n/a, actually
    end To_PCH_Port;
 
    function To_Display_Type (Port : Active_Port_Type) return Display_Type
@@ -76,11 +84,12 @@ is
    begin
       return Display_Type'
         (case Port is
-            when LVDS            => LVDS,
-            when eDP             => DP,
-            when Analog          => VGA,
-            when HDMI1 .. HDMI3  => HDMI,
-            when DP1 .. DP3      => DP);
+            when LVDS             => LVDS,
+            when eDP              => DP,
+            when Analog           => VGA,
+            when HDMI1 .. HDMI3   => HDMI,
+            when DP1 .. DP3       => DP,
+            when USBC1 .. USBC6   => DP);
    end To_Display_Type;
 
    function To_Panel (Port : Active_Port_Type) return Panel_Control

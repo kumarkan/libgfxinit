@@ -18,22 +18,53 @@ with HW.GFX.GMA.Config_Helpers;
 
 package body HW.GFX.GMA.Port_Detect
 is
-   -- HOTPLUG_CTL register is used for detecting hotplug on TBT or Type-C
-   --  (DP alternate mode)
-   --
-   -- Enable HOTPLUG_CTL and configure interrupt related registers to
-   --  receive HPD IRQs.
-   -- Read PORT_TX_DFLEXDPPMS DPPMSTC, PORT_TX_DFLEXDPCSSS DPPMSTC,
-   --  and PORT_TX_DFLEXDPSP TC Live State.
-   -- Type-C DP Alt Mode connection pending is indicated by
-   --  DPSP TC Live State = 01, DPPMS = 1, DPCSSS = 0
+   --- 3 FIAs, base 0x163000, 0x16e000, 0x16f000
    
-   -- Legacy HDMI/DP hotplug is detected through the south display hotplug
-   --  control/interrupt registers.
-   
+   type DDI_Port_Value is array (Digital_Port) of Word32;
+   SHOTPLUG_CTL_DDI_LONG_DETECT : constant Digital_Port_Value :=
+     (DIGI_A => 3 * 2 ** 0,
+      DIGI_B => 3 * 2 ** 4,
+      DIGI_C => 3 * 2 ** 8,
+      others => 0);
+
+   SHOTPLUG_CLT_DDI_HPD_ENABLE : constant Digital_Port_Value :=
+     (DIGI_A => 8 * 2 ** 0,
+      DIGI_B => 8 * 2 ** 4,
+      DIGI_C => 8 * 2 ** 8,
+      others => 0);
+
+   SHOTPLUG_CLT_DDI_HPD_STATUS : constant Digital_Port_Value :=
+     (DIGI_A => 3 * 2 ** 0,
+      DIGI_B => 3 * 2 ** 4,
+      DIGI_C => 3 * 2 ** 8,
+      others => 0);
+
+   SHOTPLUG_CTL_DETECT_MASK : constant Word32 := 16#0003_0303#;
+
+   type TC_Port_Value is array (Type_C_Port) of Word32;
+   SHOTPLUG_CTL_TC_LONG_DETECT : constant TC_Port_Value :=
+     (TypeC_1 => 2 * 2 ** 0,
+      TypeC_2 => 2 * 2 ** 4,
+      TypeC_3 => 2 * 2 ** 8,
+      TypeC_4 => 2 * 2 ** 12,
+      others => 0);
+
+   SHOTPLUG_CTL_TC_HPD_ENABLE : constant TC_Port_Value :=
+      (TypeC_1 => 8 * 2 ** 0,
+       TypeC_2 => 8 * 2 ** 4,
+       TypeC_3 => 8 * 2 ** 8,
+       TypeC_4 => 8 * 2 ** 12);
+
+   SHOTPLUG_CTL_TC_LONG_DETECT : constant TC_Port_Value :=
+     (TypeC_1 => 3 * 2 ** 0,
+      TypeC_2 => 3 * 2 ** 4,
+      TypeC_3 => 3 * 2 ** 8,
+      TypeC_4 => 3 * 2 ** 12,
+      others => 0);
+
    -- If a TypeC port has a connection, then TCCold must be unblocked
    --  before accessing FIA registers (i.e. DP connect flow).
-   
+
    function Control_TCCold (Enable : in Boolean) return Boolean
    is
       use type HW.Word64;
@@ -77,25 +108,83 @@ is
    begin
       return Control_TCCold (True);
    end Unblock_TCCold;
-   
-   procedure Connect_DP 
+
+   procedure Connect_DP (Port : TypeC_Port; Success : out Boolean; Max_Lanes : out Natural)
    is
+      function Status_Complete (Port : TypeC_Port) return Boolean is
+         Result : Boolean;
+      begin
+         Registers.Is_Set_Mask
+	   (Register => PORT_TX_DFLEXDPPMS (Port),
+	    Mask => DP_PHY_MODE_STATUS_COMPLETE (Port),
+	    Result => Result);
+	 return Result;
+      end Status_Complete;
+
+     type Status_Type is record
+        DP : Boolean;
+	Legacy : Boolean;
+     end record;
+
+      procedure Read_Live_Status (Port : TypeC_Port; Status : out Status_Type)
+      is
+         Isr : Word32;
+      begin
+         Registers.Read
+           (Register => PORT_TX_DFLEXDPSP (Port),
+            Value => Status);
+	 Registers.Read
+	   (Register => SDEISR,
+	    Value => Isr);
+	 Status.DP := (Status and TC_LIVE_STATE_TC_MASK (Port)) /= 0;
+	 Status.Legacy := (Isr and HPD_PIN (Port)) /= 0;        
+      end Read_Live_Status;
+
+      Live_Status : Status_Type;
+
+      procedure Take_Ownership (Port : TypeC_Port) is
+      begin
+         Register.Set_Mask
+	   (Register => PORT_TX_DFLEXDPCSSS (Port),
+	    Mask => DP_PHY_MODE_STATUS_NOT_SAFE (Port));
+      end Take_Ownership;
+
+      procedure Release_Ownership (Port : TypeC_Port) is
+      begin
+         Register.Unset_Mask
+	   (Register => PORT_TX_DFLEXDPCSSS (Port),
+	    Mask => DP_PHY_MODE_STATUS_NOT_SAFE (Port));
+      end Release_Ownership;
    begin
-      -- 1) Block TCCold
+      Max_Lanes := 0;
+
+      Block_TCCold ;
+      
       -- 2) Read DFLEXDPPMS.DPPMSTC; if 1, then IOM has switched
       --    the lane into DP mode, else abort
+      if not Status_Complete (Port) then
+         Unblock_TCCold;
+      	 return;
+      end if;
+
       -- 3) Set DFLEXDPCSSS.DPPMSTC to 1 (disable safe mode)
+      Read_Live_Status (Port, Live_Status);
+      if not (Live_Status.DP or else Live_Status.Legacy)
+        Unblock_TCCold;
+	return;
+      end if;
+
+      Take_Ownership (Port);
+
       -- 4) Read DFLEXDPSP to verify port has not become disconnected
       --    If Live State is not "HPD Connect for TypeC", abort
-      -- 5) Read lane assignment from DFLEXDPSP.DPX4TXLATC
-      -- 6) Issue AUX reads for EDID/DPCD.
-      --    Set DDI_AUX_CTL IO Select field to legacy
-      --    AUX power is controlled through PWR_WELL_CTL_AUX
-      -- 7) Based on lane assignment reg and EDID, software knows
-      --    the max # of lanes supported.
-      -- 8) Perform DP mode set enable
-      -- Note that if flow is aborted at any point, clear
-      --  DFLEXDPSP.DPPMSTC, then unblock TCCold
+      if not Status_Is_DP (Port) then
+         Unblock_TCCold;
+         Release_Ownership (Port);
+      	 return
+      end if;
+
+      Read_TC_Lanes (Port, Max_Lanes);
    end Connect_DP;
    
    procedure Connect_Fixed
@@ -133,10 +222,8 @@ is
    procedure Initialize
    is
       subtype Ext_Digital_Port is
-         Digital_Port range DIGI_B .. DIGI_I;
+         Digital_Port range DIGI_B .. TypeC_4;
       Internal_Detected : Boolean;
-      DDI_Detected : Boolean;
-      TypeC_Detected : Boolean;
    begin
       -- DDI_A
       if Config.Has_Presence_Straps and not Config.Ignore_Presence_Straps then
@@ -151,15 +238,13 @@ is
       if Internal_Detected then
          Registers.Unset_And_Set_Mask
 	   (Register => Registers.SHOTPLUG_CTL,
-               Mask_Unset  => SHOTPLUG_CTL_DETECT_MASK,
-               Mask_Set    => SHOTPLUG_CTL_HPD_INPUT_ENABLE (DIGI_A) or
-                              SHOTPLUG_CTL_HPD_STATUS (DIGI_A));  -- clear
+               Mask_Unset  => SHOTPLUG_CTL_DETECT_MASK, -- clear the long/short detect bits
+               Mask_Set    => SHOTPLUG_CTL_DDI_HPD_ENABLE (DIGI_A) or
+                              SHOTPLUG_CTL_DDI_HPD_STATUS (DIGI_A));  -- clear
       end if;
       Config.Valid_Port (eDP) := Internal_Detected;
-
-      for Port in Ext_Digital_Port range DIGI_B .. DIGI_C loop
-         if 
-
+      -- ICL onwards does not appear to have detection registers like SFUSE_STRAP...
+      Config.Valid_Port (...) := ?;
    end Initialize;
 
    end Hotplug_Detect (Port : Active_Port_Type; Detected : out Boolean)
@@ -168,24 +253,32 @@ is
          Config_Helpers.To_GPU_Port (Primary, Port);
    begin
       -- DDI_[ABC]
-      if GPU_Port in DIGI_A .. DIGI_C then
-         Registers.Read (Registers.SHOTPLUG_CTL, Ctl32, Verbose => False);
-	 Detected := (Ctl32 and SHOTPLUG_CTL_LONG_DETECT (GPU_Port)) /= 0;
+      if Is_DDI_Port (GPU_Port) then
+         Registers.Read (Registers.SHOTPLUG_CTL_DDI, Ctl32, Verbose => False);
+	 Detected := (Ctl32 and SHOTPLUG_CTL_DDI_LONG_DETECT (GPU_Port)) /= 0;
 
-         if (Ctl32 and SHOTPLUG_CTL_HPD_STATUS (GPU_Port)) /= 0 then
+         if Detected /= 0 then
 	    Registers.Unset_And_Set_Mask
-	      (Register => Registers.SHOTPLUG_CTL,
-               Mask_Unset  => SHOTPLUG_CTL_DETECT_MASK,
-               Mask_Set    => SHOTPLUG_CTL_HPD_STATUS (GPU_Port));
+	      (Register => Registers.SHOTPLUG_CTL_DDI,
+               Mask_Unset  => SHOTPLUG_CTL_DDI_HPD_ENABLE (GPU_Port),
+               Mask_Set    => SHOTPLUG_CTL_DDI_STATUS_MASK (GPU_Port));
 	 end if;
       -- TypeC_1..6
-      elsif GPU_Port in DIGI_D .. DIGI_I then
-         Registers.Read (Registers.TC_HOTPLUG_CTL, Ctl32);
-	 Detected := (Ctl32 and TC_HOTPLUG_CTL_LONG_DETECT (GPU_Port)) /= 0;
+      elsif Is_TypeC_Port(GPU_Port) then
+         Registers.Read (Registers.SHOTPLUG_CTL_TC, Ctl32);
+	 Detected := (Ctl32 and SHOTPLUG_CTL_TC_LONG_DETECT (GPU_Port)) /= 0;
 
-         Registers.Set_Mask
-	   (Regster => Registers.TC_HOTPLUG_CTL,
-	    Mask => TC_HOTPLUG_CTL_LONG_DETECT (GPU_Port));
+         if Is_Port_Legacy (Port) -- THIS WILL HAVE TO COME FROM coreboot as an input,
+	    		   	  -- usually comes from the VBT.
+	       Connect_Fixed (Port);
+	 else
+	       Connect_DP (Port);
+	 end if;
+
+         Registers.Unset_And_Set_Mask
+	   (Regster => Registers.SHOTPLUG_CTL_TC,
+	    Mask_Unset => SHOTPLUG_CTL_TC_STATUS_MASK (GPU_Port),
+	    Mask_Set => SHOTPLUG_CTL_TC_LONG_DETECT (GPU_Port));
       else
          Detected := False;
       end if;

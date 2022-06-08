@@ -763,7 +763,9 @@ is
       PORT_COMP_DW0_B,
       PORT_COMP_DW0_C,
       PHY_MISC_A,
-      PHY_MISC_B);
+      PHY_MISC_B,
+      SHOTPLUG_CTL_DDI,
+      SHOTPLUG_CTL_TC);
 
    pragma Warnings
      (GNATprove, Off, "pragma ""KEEP_NAMES"" ignored *(not yet supported)",
@@ -1663,7 +1665,12 @@ is
       PORT_COMP_DW0_C       => 16#16_0100# / Register_Width,
       
       PHY_MISC_A            => 16#06_4c00# / Register_Width,
-      PHY_MISC_B            => 16#06_4c04# / Register_Width);
+      PHY_MISC_B            => 16#06_4c04# / Register_Width,
+
+      -- TGL Hotplug
+
+      SHOTPLUG_CTL_DDI      => 16#0c_4030# / Register_Width,
+      SHOTPLUG_CTL_TC       => 16#0c_4034# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..

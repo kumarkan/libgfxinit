@@ -109,11 +109,16 @@ is
       HOTPLUG_CTL,
       ARB_CTL,
       DBUF_CTL,
+      MBUS_ABOX_CTL,
+      MBUS_ABOX1_CTL,
+      MBUS_ABOX2_CTL,
       WM_PIPE_A,
       WM_PIPE_B,
       WM1_LP_ILK,
       WM2_LP_ILK,
       WM3_LP_ILK,
+      BW_BUDDY1_PAGE_MASK,
+      BW_BUDDY2_PAGE_MASK,
       WM_PIPE_C,
       WM_LINETIME_A,
       WM_LINETIME_B,
@@ -124,6 +129,10 @@ is
       PWR_WELL_CTL_DEBUG,
       PWR_WELL_CTL5,
       PWR_WELL_CTL6,
+      PWR_AUX_CTL_BIOS,
+      PWR_AUX_CTL_DRIVER,
+      PWR_DDI_CTL_BIOS,
+      PWR_DDI_CTL_DRIVER,
       CDCLK_CTL,
       LCPLL1_CTL,
       LCPLL2_CTL,
@@ -145,9 +154,11 @@ is
       CDCLK_FREQ,
       NDE_RSTWRN_OPT,
       GEN8_CHICKEN_DCPR_1,
+      GEN11_CHICKEN_DCPR_2,
       BLC_PWM_CPU_CTL2,
       BLC_PWM_CPU_CTL,
       DFSM,
+      DSSM,
       HTOTAL_A,
       HBLANK_A,
       HSYNC_A,
@@ -256,6 +267,8 @@ is
       SRD_CTL,
       SRD_STATUS,
       BXT_PHY_CTL_A,
+      PHY_MISC_B,
+      PHY_MISC_C,
       BXT_PHY_CTL_B,
       BXT_PHY_CTL_C,
       BXT_PHY_CTL_FAM_EDP,
@@ -387,6 +400,7 @@ is
       PS_CTRL_1_C,
       BXT_PORT_CL1CM_DW0_BC,
       DISPIO_CR_TX_BMU_CR0,
+      PORT_CL_DW5_B,
       BXT_PORT_CL1CM_DW9_BC,
       BXT_PORT_CL1CM_DW10_BC,
       BXT_PORT_PLL_EBB_0_B,
@@ -431,10 +445,14 @@ is
       BXT_PORT_TX_DW4_LN0_B,
       BXT_PORT_TX_DW14_LN0_B,
       BXT_PORT_TX_DW14_LN1_B,
+      PORT_PCS_DW1_GRP_B,
+      PORT_TX_DW8_GRP_B,
       BXT_PORT_TX_DW14_LN2_B,
       BXT_PORT_TX_DW14_LN3_B,
+      PORT_PCS_DW1_LN0_B,
       BXT_PORT_PCS_DW10_01_C,
       BXT_PORT_PCS_DW12_01_C,
+      PORT_TX_DW8_LN0_B,
       BXT_PORT_TX_DW2_LN0_C,
       BXT_PORT_TX_DW3_LN0_C,
       BXT_PORT_TX_DW4_LN0_C,
@@ -722,12 +740,26 @@ is
       FDI_RXC_TUSIZE1,
       QUIRK_F2060,
       TRANSC_CHICKEN2,
+      HIP_INDEX_REG0,
+      HIP_INDEX_REG1,
       LCPLL_CTL,
       BXT_P_CR_GT_DISP_PWRON,
       GT_MAILBOX,
       GT_MAILBOX_DATA,
       GT_MAILBOX_DATA_1,
+      PORT_CL_DW5_C,
+      PORT_COMP_DW0_C,
+      PORT_COMP_DW1_C,
+      PORT_COMP_DW3_C,
+      PORT_COMP_DW8_C,
+      PORT_COMP_DW9_C,
+      PORT_COMP_DW10_C,
+      PORT_PCS_DW1_GRP_C,
+      PORT_TX_DW8_GRP_C,
+      PORT_PCS_DW1_LN0_C,
+      PORT_TX_DW8_LN0_C,
       BXT_PORT_CL1CM_DW0_A,
+      PORT_CL_DW5_A,
       BXT_PORT_CL1CM_DW9_A,
       BXT_PORT_CL1CM_DW10_A,
       BXT_PORT_PLL_EBB_0_A,
@@ -752,14 +784,23 @@ is
       BXT_PORT_TX_DW4_LN0_A,
       BXT_PORT_TX_DW14_LN0_A,
       BXT_PORT_TX_DW14_LN1_A,
+      PORT_PCS_DW1_GRP_A,
+      PORT_TX_DW8_GRP_A,
       BXT_PORT_TX_DW14_LN2_A,
       BXT_PORT_TX_DW14_LN3_A,
+      PORT_PCS_DW1_LN0_A,
+      PORT_TX_DW8_LN0_A,
       BXT_PORT_PCS_DW10_GRP_A,
       BXT_PORT_PCS_DW12_GRP_A,
       BXT_PORT_TX_DW2_GRP_A,
       BXT_PORT_TX_DW3_GRP_A,
-      BXT_PORT_TX_DW4_GRP_A);
-
+      BXT_PORT_TX_DW4_GRP_A,
+      DKL_CMN_UC_DW_27_1,
+      DKL_CMN_UC_DW_27_2,
+      DKL_CMN_UC_DW_27_3,
+      DKL_CMN_UC_DW_27_4,
+      DKL_CMN_UC_DW_27_5,
+      DKL_CMN_UC_DW_27_6);
    pragma Warnings
      (GNATprove, Off, "pragma ""KEEP_NAMES"" ignored *(not yet supported)",
       Reason => "TODO: Should it matter?");
@@ -1430,6 +1471,11 @@ is
       PWR_WELL_CTL5         => 16#04_5410# / Register_Width,
       PWR_WELL_CTL6         => 16#04_5414# / Register_Width,
 
+      PWR_AUX_CTL_BIOS      => 16#04_5440# / Register_Width,
+      PWR_AUX_CTL_DRIVER    => 16#04_5444# / Register_Width,
+      PWR_DDI_CTL_BIOS      => 16#04_5450# / Register_Width,
+      PWR_DDI_CTL_DRIVER    => 16#04_5454# / Register_Width,
+
       -- class Panel registers
       GMCH_PP_STATUS        => 16#06_1200# / Register_Width,
       GMCH_PP_CONTROL       => 16#06_1204# / Register_Width,
@@ -1481,6 +1527,7 @@ is
 
       -- Intel Registers
       DFSM                  => 16#05_1000# / Register_Width,
+      DSSM                  => 16#05_1004# / Register_Width,
       CPU_VGACNTRL          => 16#04_1000# / Register_Width,
       GMCH_VGACNTRL         => 16#07_1400# / Register_Width,
       FUSE_STATUS           => 16#04_2000# / Register_Width,
@@ -1491,6 +1538,7 @@ is
       DBUF_CTL              => 16#04_5008# / Register_Width,
       NDE_RSTWRN_OPT        => 16#04_6408# / Register_Width,
       GEN8_CHICKEN_DCPR_1   => 16#04_6430# / Register_Width,
+      GEN11_CHICKEN_DCPR_2  => 16#04_6434# / Register_Width,
       PCH_DREF_CONTROL      => 16#0c_6200# / Register_Width,
       PCH_DPLL_SEL          => 16#0c_7000# / Register_Width,
       GT_MAILBOX            => 16#13_8124# / Register_Width,
@@ -1649,7 +1697,50 @@ is
 
       GMCH_CLKCFG           => 16#01_0c00# / Register_Width,
       GMCH_HPLLVCO_MOBILE   => 16#01_0c0f# / Register_Width,
-      GMCH_HPLLVCO          => 16#01_0c38# / Register_Width);
+      GMCH_HPLLVCO          => 16#01_0c38# / Register_Width,
+
+      -- Combo Phy Registers (Tigerlake on)
+
+      PHY_MISC_B            => 16#06_4c04# / Register_Width,
+      PHY_MISC_C            => 16#06_4c08# / Register_Width,
+      PORT_CL_DW5_A         => 16#16_2014# / Register_Width,
+      PORT_CL_DW5_B         => 16#06_c014# / Register_Width,
+      PORT_CL_DW5_C         => 16#16_0014# / Register_Width,
+      PORT_COMP_DW0_C       => 16#16_0100# / Register_Width,
+      PORT_COMP_DW1_C       => 16#16_0104# / Register_Width,
+      PORT_COMP_DW3_C       => 16#16_010c# / Register_Width,
+      PORT_COMP_DW8_C       => 16#16_0120# / Register_Width,
+      PORT_COMP_DW9_C       => 16#16_0124# / Register_Width,
+      PORT_COMP_DW10_C      => 16#16_0128# / Register_Width,
+      PORT_TX_DW8_LN0_A     => 16#16_28a0# / Register_Width,
+      PORT_TX_DW8_LN0_B     => 16#06_c8a0# / Register_Width,
+      PORT_TX_DW8_LN0_C     => 16#16_08a0# / Register_Width,
+      PORT_TX_DW8_GRP_A     => 16#16_26a0# / Register_Width,
+      PORT_TX_DW8_GRP_B     => 16#06_c6a0# / Register_Width,
+      PORT_TX_DW8_GRP_C     => 16#16_06a0# / Register_Width,
+      PORT_PCS_DW1_LN0_A    => 16#16_2804# / Register_Width,
+      PORT_PCS_DW1_LN0_B    => 16#06_c804# / Register_Width,
+      PORT_PCS_DW1_LN0_C    => 16#16_0804# / Register_Width,
+      PORT_PCS_DW1_GRP_A    => 16#16_2604# / Register_Width,
+      PORT_PCS_DW1_GRP_B    => 16#06_c604# / Register_Width,
+      PORT_PCS_DW1_GRP_C    => 16#16_0604# / Register_Width,
+      MBUS_ABOX_CTL         => 16#04_5038# / Register_Width,
+      MBUS_ABOX1_CTL        => 16#04_5048# / Register_Width,
+      MBUS_ABOX2_CTL        => 16#04_504c# / Register_Width,
+      BW_BUDDY1_PAGE_MASK   => 16#04_5144# / Register_Width,
+      BW_BUDDY2_PAGE_MASK   => 16#04_5154# / Register_Width,
+
+      -- For accessing DKL PHY registers
+      HIP_INDEX_REG0        => 16#10_10a0# / Register_Width,
+      HIP_INDEX_REG1        => 16#10_10a4# / Register_Width,
+
+      -- DKL PHY registers
+      DKL_CMN_UC_DW_27_1    => 16#16_836c# / Register_Width,
+      DKL_CMN_UC_DW_27_2    => 16#16_936c# / Register_Width,
+      DKL_CMN_UC_DW_27_3    => 16#16_a36c# / Register_Width,
+      DKL_CMN_UC_DW_27_4    => 16#16_b36c# / Register_Width,
+      DKL_CMN_UC_DW_27_5    => 16#16_c36c# / Register_Width,
+      DKL_CMN_UC_DW_27_6    => 16#16_d36c# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..
@@ -1675,6 +1766,21 @@ is
    CURAPOS              : constant Registers_Index := CUR_POS_A;
    BXT_BLC_PWM_CTL_1    : constant Registers_Index := BLC_PWM_PCH_CTL1;
    BXT_BLC_PWM_FREQ_1   : constant Registers_Index := BLC_PWM_PCH_CTL2;
+   PHY_MISC_A           : constant Registers_Index := BXT_PHY_CTL_A;
+   PORT_COMP_DW0_B      : constant Registers_Index := BXT_PORT_PLL_0_B;
+   PORT_COMP_DW1_B      : constant Registers_Index := BXT_PORT_PLL_1_B;
+   PORT_COMP_DW3_B      : constant Registers_Index := BXT_PORT_PLL_3_B;
+   PORT_COMP_DW0_A      : constant Registers_Index := BXT_PORT_CL1CM_DW9_A;
+   PORT_COMP_DW1_A      : constant Registers_Index := BXT_PORT_PLL_1_A;
+   PORT_COMP_DW3_A      : constant Registers_Index := BXT_PORT_PLL_3_A;
+   PORT_COMP_DW9_A      : constant Registers_Index := BXT_PORT_PLL_9_A;
+   PORT_COMP_DW9_B      : constant Registers_Index := BXT_PORT_PLL_9_B;
+   PORT_COMP_DW8_A      : constant Registers_Index := BXT_PORT_PLL_8_A;
+   PORT_COMP_DW8_B      : constant Registers_Index := BXT_PORT_PLL_8_B;
+   PORT_COMP_DW10_A     : constant Registers_Index := BXT_PORT_PLL_10_A;
+   PORT_COMP_DW10_B     : constant Registers_Index := BXT_PORT_PLL_10_B;
+   CDCLK_PLL_ENABLE     : constant Registers_Index := BXT_DE_PLL_ENABLE;
+
 
    ---------------------------------------------------------------------------
 

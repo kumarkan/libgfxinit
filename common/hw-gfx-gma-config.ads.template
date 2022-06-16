@@ -287,6 +287,9 @@ private package HW.GFX.GMA.Config is
    ----------- GTT: -------------
    Has_64bit_GTT                 : <hswbool> := Broadwell_On;
 
+   ----------- Type-C: ----------
+   Has_Type_C_Ports              : <genbool> := Tigerlake_On;
+
    ----------------------------------------------------------------------------
 
    Max_Pipe : <ilkvar> Pipe_Index :=

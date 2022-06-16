@@ -46,6 +46,19 @@ is
                      when Primary   => DIGI_B,
                      when Secondary => DIGI_C,
                      when Tertiary  => DIGI_D)),
+            when Tigerlake =>
+              (case Port is
+                  when eDP         => DIGI_A,
+                  when HDMI1 | DP1 => DIGI_B,
+                  when HDMI2 | DP2 => DIGI_C,
+                  when HDMI3 | DP3 => DIGI_D,
+                  when USBC1       => DDI_TC1,
+                  when USBC2       => DDI_TC2,
+                  when USBC3       => DDI_TC3,
+                  when USBC4       => DDI_TC4,
+                  when USBC5       => DDI_TC5,
+                  when USBC6       => DDI_TC6,
+                  when others      => LVDS),    -- n/a, actually
             when others =>             -- everything but VGA directly on CPU
               (case Port is
                   when LVDS         => LVDS,    -- n/a, actually

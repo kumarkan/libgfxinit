@@ -262,9 +262,39 @@ is
       DP_TP_CTL_D,
       DP_TP_STATUS_D,
       DDI_BUF_CTL_E,
+      DDI_AUX_CTL_USBC2,
+      DDI_AUX_DATA_USBC2_1,
+      DDI_AUX_DATA_USBC2_2,
+      DDI_AUX_DATA_USBC2_3,
+      DDI_AUX_DATA_USBC2_4,
+      DDI_AUX_DATA_USBC2_5,
       DP_TP_CTL_E,
       DP_TP_STATUS_E,
+      DDI_AUX_CTL_USBC3,
+      DDI_AUX_DATA_USBC3_1,
+      DDI_AUX_DATA_USBC3_2,
+      DDI_AUX_DATA_USBC3_3,
+      DDI_AUX_DATA_USBC3_4,
+      DDI_AUX_DATA_USBC3_5,
+      DDI_AUX_CTL_USBC4,
+      DDI_AUX_DATA_USBC4_1,
+      DDI_AUX_DATA_USBC4_2,
+      DDI_AUX_DATA_USBC4_3,
+      DDI_AUX_DATA_USBC4_4,
+      DDI_AUX_DATA_USBC4_5,
+      DDI_AUX_CTL_USBC5,
+      DDI_AUX_DATA_USBC5_1,
+      DDI_AUX_DATA_USBC5_2,
+      DDI_AUX_DATA_USBC5_3,
+      DDI_AUX_DATA_USBC5_4,
+      DDI_AUX_DATA_USBC5_5,
       SRD_CTL,
+      DDI_AUX_CTL_USBC6,
+      DDI_AUX_DATA_USBC6_1,
+      DDI_AUX_DATA_USBC6_2,
+      DDI_AUX_DATA_USBC6_3,
+      DDI_AUX_DATA_USBC6_4,
+      DDI_AUX_DATA_USBC6_5,
       SRD_STATUS,
       BXT_PHY_CTL_A,
       PHY_MISC_B,
@@ -1281,6 +1311,39 @@ is
       DDI_AUX_DATA_D_5      => 16#06_4324# / Register_Width,
       DDI_AUX_MUTEX_D       => 16#06_432c# / Register_Width,
 
+      -- USB-C AUX control and data
+      DDI_AUX_CTL_USBC2     => 16#06_4410# / Register_Width,
+      DDI_AUX_DATA_USBC2_1  => 16#06_4414# / Register_Width,
+      DDI_AUX_DATA_USBC2_2  => 16#06_4418# / Register_Width,
+      DDI_AUX_DATA_USBC2_3  => 16#06_441c# / Register_Width,
+      DDI_AUX_DATA_USBC2_4  => 16#06_4420# / Register_Width,
+      DDI_AUX_DATA_USBC2_5  => 16#06_4424# / Register_Width,
+      DDI_AUX_CTL_USBC3     => 16#06_4510# / Register_Width,
+      DDI_AUX_DATA_USBC3_1  => 16#06_4514# / Register_Width,
+      DDI_AUX_DATA_USBC3_2  => 16#06_4518# / Register_Width,
+      DDI_AUX_DATA_USBC3_3  => 16#06_451c# / Register_Width,
+      DDI_AUX_DATA_USBC3_4  => 16#06_4520# / Register_Width,
+      DDI_AUX_DATA_USBC3_5  => 16#06_4524# / Register_Width,
+      DDI_AUX_CTL_USBC4     => 16#06_4610# / Register_Width,
+      DDI_AUX_DATA_USBC4_1  => 16#06_4614# / Register_Width,
+      DDI_AUX_DATA_USBC4_2  => 16#06_4618# / Register_Width,
+      DDI_AUX_DATA_USBC4_3  => 16#06_461c# / Register_Width,
+      DDI_AUX_DATA_USBC4_4  => 16#06_4620# / Register_Width,
+      DDI_AUX_DATA_USBC4_5  => 16#06_4624# / Register_Width,
+      DDI_AUX_CTL_USBC5     => 16#06_4710# / Register_Width,
+      DDI_AUX_DATA_USBC5_1  => 16#06_4714# / Register_Width,
+      DDI_AUX_DATA_USBC5_2  => 16#06_4718# / Register_Width,
+      DDI_AUX_DATA_USBC5_3  => 16#06_471c# / Register_Width,
+      DDI_AUX_DATA_USBC5_4  => 16#06_4720# / Register_Width,
+      DDI_AUX_DATA_USBC5_5  => 16#06_4724# / Register_Width,
+      DDI_AUX_CTL_USBC6     => 16#06_4810# / Register_Width,
+      DDI_AUX_DATA_USBC6_1  => 16#06_4814# / Register_Width,
+      DDI_AUX_DATA_USBC6_2  => 16#06_4818# / Register_Width,
+      DDI_AUX_DATA_USBC6_3  => 16#06_481c# / Register_Width,
+      DDI_AUX_DATA_USBC6_4  => 16#06_4820# / Register_Width,
+      DDI_AUX_DATA_USBC6_5  => 16#06_4824# / Register_Width,
+
+
       DDI_BUF_CTL_E         => 16#06_4400# / Register_Width,
       DDI_BUF_TRANS_E_S0T1  => 16#06_4f80# / Register_Width,
       DDI_BUF_TRANS_E_S0T2  => 16#06_4f84# / Register_Width,
@@ -1780,6 +1843,12 @@ is
    PORT_COMP_DW10_A     : constant Registers_Index := BXT_PORT_PLL_10_A;
    PORT_COMP_DW10_B     : constant Registers_Index := BXT_PORT_PLL_10_B;
    CDCLK_PLL_ENABLE     : constant Registers_Index := BXT_DE_PLL_ENABLE;
+   DDI_AUX_CTL_USBC1    : constant Registers_Index := DDI_AUX_CTL_D;
+   DDI_AUX_DATA_USBC1_1 : constant Registers_Index := DDI_AUX_DATA_D_1;
+   DDI_AUX_DATA_USBC1_2 : constant Registers_Index := DDI_AUX_DATA_D_2;
+   DDI_AUX_DATA_USBC1_3 : constant Registers_Index := DDI_AUX_DATA_D_3;
+   DDI_AUX_DATA_USBC1_4 : constant Registers_Index := DDI_AUX_DATA_D_4;
+   DDI_AUX_DATA_USBC1_5 : constant Registers_Index := DDI_AUX_DATA_D_5;
 
 
    ---------------------------------------------------------------------------

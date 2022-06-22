@@ -75,16 +75,25 @@ package HW.GFX is
       DP_Lane_Count_Integers'
         (DP_Lane_Count_1 => 1, DP_Lane_Count_2 => 2, DP_Lane_Count_4 => 4);
 
-   type DP_Bandwidth is (DP_Bandwidth_1_62, DP_Bandwidth_2_7, DP_Bandwidth_5_4);
+   type DP_Bandwidth is (DP_Bandwidth_1_62, DP_Bandwidth_2_16, DP_Bandwidth_2_7,
+      DP_Bandwidth_3_24, DP_Bandwidth_4_32, DP_Bandwidth_5_4, DP_Bandwidth_6_48,
+      DP_Bandwidth_8_10);
    for DP_Bandwidth use
-     (DP_Bandwidth_1_62 => 6, DP_Bandwidth_2_7 => 10, DP_Bandwidth_5_4 => 20);
+     (DP_Bandwidth_1_62 => 6, DP_Bandwidth_2_16 => 8, DP_Bandwidth_2_7 => 10,
+      DP_Bandwidth_3_24 => 12, DP_Bandwidth_4_32 => 16, DP_Bandwidth_5_4 => 20,
+      DP_Bandwidth_6_48 => 24, DP_Bandwidth_8_10 => 30);
    for DP_Bandwidth'Size use 8;
    subtype DP_Symbol_Rate_Type is Pos64 range 1 .. 810_000_000;
    type DP_Symbol_Rate_Array is array (DP_Bandwidth) of DP_Symbol_Rate_Type;
    DP_Symbol_Rate : constant DP_Symbol_Rate_Array := DP_Symbol_Rate_Array'
      (DP_Bandwidth_1_62 => 162_000_000,
+      DP_Bandwidth_2_16 => 216_000_000,
       DP_Bandwidth_2_7  => 270_000_000,
-      DP_Bandwidth_5_4  => 540_000_000);
+      DP_Bandwidth_3_24 => 324_000_000,
+      DP_Bandwidth_4_32 => 432_000_000,
+      DP_Bandwidth_5_4  => 540_000_000,
+      DP_Bandwidth_6_48 => 648_000_000,
+      DP_Bandwidth_8_10 => 810_000_000);
 
    type DP_Caps is record
       Rev               : Word8;

@@ -136,6 +136,7 @@ is
       CDCLK_CTL,
       LCPLL1_CTL,
       LCPLL2_CTL,
+      DPLL_4_ENABLE,
       SPLL_CTL,
       WRPLL_CTL_1,
       WRPLL_CTL_2,
@@ -825,6 +826,15 @@ is
       BXT_PORT_TX_DW2_GRP_A,
       BXT_PORT_TX_DW3_GRP_A,
       BXT_PORT_TX_DW4_GRP_A,
+      DPLL_0_CFGCR0,
+      DPLL_0_CFGCR1,
+      DPLL_1_CFGCR0,
+      DPLL_1_CFGCR1,
+      DPLL_4_CFGCR0,
+      DPLL_4_CFGCR1,
+      DPLL_0_SSC,
+      DPLL_1_SSC,
+      DPLL_4_SSC,
       DKL_CMN_UC_DW_27_1,
       DKL_CMN_UC_DW_27_2,
       DKL_CMN_UC_DW_27_3,
@@ -1803,7 +1813,19 @@ is
       DKL_CMN_UC_DW_27_3    => 16#16_a36c# / Register_Width,
       DKL_CMN_UC_DW_27_4    => 16#16_b36c# / Register_Width,
       DKL_CMN_UC_DW_27_5    => 16#16_c36c# / Register_Width,
-      DKL_CMN_UC_DW_27_6    => 16#16_d36c# / Register_Width);
+      DKL_CMN_UC_DW_27_6    => 16#16_d36c# / Register_Width,
+
+      -- DPLL registers
+      DPLL_4_ENABLE         => 16#04_6018# / Register_Width,
+      DPLL_0_CFGCR0         => 16#16_4284# / Register_Width,
+      DPLL_0_CFGCR1         => 16#16_4288# / Register_Width,
+      DPLL_1_CFGCR0         => 16#16_428c# / Register_Width,
+      DPLL_1_CFGCR1         => 16#16_4290# / Register_Width,
+      DPLL_4_CFGCR0         => 16#16_4294# / Register_Width,
+      DPLL_4_CFGCR1         => 16#16_4298# / Register_Width,
+      DPLL_0_SSC            => 16#16_4b10# / Register_Width,
+      DPLL_1_SSC            => 16#16_4c10# / Register_Width,
+      DPLL_4_SSC            => 16#16_4e10# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..
@@ -1849,7 +1871,8 @@ is
    DDI_AUX_DATA_USBC1_3 : constant Registers_Index := DDI_AUX_DATA_D_3;
    DDI_AUX_DATA_USBC1_4 : constant Registers_Index := DDI_AUX_DATA_D_4;
    DDI_AUX_DATA_USBC1_5 : constant Registers_Index := DDI_AUX_DATA_D_5;
-
+   DPLL_0_ENABLE        : constant Registers_Index := LCPLL1_CTL;
+   DPLL_1_ENABLE        : constant Registers_Index := LCPLL2_CTL;
 
    ---------------------------------------------------------------------------
 

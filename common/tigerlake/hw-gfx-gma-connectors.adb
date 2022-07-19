@@ -1,5 +1,5 @@
 --
--- Copyright (C) 2022 Google LLC
+-- Copyright (C) 2022 Google, LLC
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,106 +14,74 @@
 
 with HW.GFX.GMA.Config;
 with HW.GFX.GMA.Panel;
-with HW.GFX.GMA.Connectors.DDI;
 
 with HW.Debug;
 with GNAT.Source_Info;
+with HW.GFX.GMA.Connectors.DDI;
 
 package body HW.GFX.GMA.Connectors is
 
    procedure Post_Reset_Off is
    begin
-      DDI.Post_Reset_Off;
-      TC.Post_Reset_Off;
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
    end Post_Reset_Off;
 
    procedure Initialize is
    begin
-      DDI.Initialize;
-      TC.Initialize;
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
    end Initialize;
 
    procedure Pre_On
-     (Pipe     : in     Pipe_Index;
-      Port_Cfg : in     Port_Config;
-      PLL_Hint : in     Word32;
-      Success  :    out Boolean)
-   is
+     (Pipe        : in     Pipe_Index;
+      Port_Cfg    : in     Port_Config;
+      PLL_Hint    : in     Word32;
+      Success     :    out Boolean) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-      if Port_Cfg.Port in Digital_Port then
-         DDI.Pre_On (Port_Cfg, PLL_Hint, Success);
-      elsif Port_Cfg.Port in TypeC_Port then
-         TC.Pre_On (Port_Cfg, PLL_Hint, Success);
-      else
-         Success := False;
-      end if;
+      DDI.Pre_On (Pipe, Port_Cfg, PLL_Hint, Success);
    end Pre_On;
 
    procedure Post_On
      (Pipe     : in     Pipe_Index;
       Port_Cfg : in     Port_Config;
       PLL_Hint : in     Word32;
-      Success  :    out Boolean)
-   is
+      Success  :    out Boolean) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-
-      if Port_Cfg.Port in Digital_Port then
-         DDI.Post_On (Port_Cfg);
-
-         Panel.Backlight_On (Port_Cfg.Panel);
-         Success := True;
-      elsif Port_Cfg.Port in TypeC_Port then
-         TC.Post_On (Port_Cfg);
-
-         Panel.Backlight_On (Port_Cfg.Panel);
-	 Success := True;
-      else
-         Success := False; -- Should not happen
-      end if;
+      Panel.Backlight_On (Port_Cfg.Panel);
+      Success := True;
    end Post_On;
 
-   procedure Pre_Off (Port_Cfg : Port_Config)
-   is
+   procedure Pre_Off (Port_Cfg : Port_Config) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-
       Panel.Backlight_Off (Port_Cfg.Panel);
       Panel.Off (Port_Cfg.Panel);
    end Pre_Off;
 
-   procedure Post_Off (Port_Cfg : Port_Config)
-   is
+   procedure Post_Off (Port_Cfg : Port_Config) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-      if Port_Cfg.Port in Digital_Port then
-         DDI.Off (Port_Cfg.Port);
-      elsif Port_Cfg.Port in TypeC_Port then
-         TC.Off (Port_Cfg.Port);
+      if Port_Cfg.Port in Combo_Port then
+         DDI.Off (Port_Cfg.Pipe, Port_Cfg.Port);
       end if;
    end Post_Off;
 
-   ----------------------------------------------------------------------------
-
-   procedure Pre_All_Off
-   is
+   procedure Pre_All_Off  is
    begin
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
       for P in Valid_Panels loop
          Panel.Backlight_Off (P);
          Panel.Off (P);
       end loop;
    end Pre_All_Off;
 
-   procedure Post_All_Off
-   is
+   procedure Post_All_Off is
    begin
-      for Port in Digital_Port range DIGI_A .. Config.Last_Digital_Port loop
-         DDI.Off (Port);
-      end loop;
-
-      for Port in TypeC_Port range TypeC_1 .. Config.Last_TypeC_Port loop
-         TC.Off (Port);
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      for Port in Combo_Port loop
+         DDI.Off (Pipe_Index'First, Port);
+	 null;
       end loop;
    end Post_All_Off;
 

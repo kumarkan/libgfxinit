@@ -18,6 +18,8 @@ with HW.GFX.GMA.Config;
 private package HW.GFX.GMA.Transcoder
 is
 
+   procedure Enable_Pipe_Clock (Pipe : Pipe_Index; Port_Cfg : Port_Config);
+   procedure Configure (Pipe : Pipe_Index; Port_Cfg : Port_Config; Scale : Boolean);
    procedure Setup (Pipe : Pipe_Index; Port_Cfg : Port_Config);
    procedure On
      (Pipe     : Pipe_Index;

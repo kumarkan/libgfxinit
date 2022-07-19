@@ -197,9 +197,12 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
                                    Params    :    out PLL_Params;
                                    Success   :    out Boolean)
    is
+      Refclk : Frequency_Type;
    begin
       Success := False;
-      if Config.Raw_Clock = 24_000_000 then
+
+      Power_And_Clocks.Get_Refclk (Refclk);
+      if Refclk = 24_000_000 then
          for I in PLL_Params_24MHz'Range loop
             if PLL_Params_24MHz (I).Bandwidth = Bandwidth then
                Params := PLL_Params_24MHz (I).P;
@@ -211,6 +214,12 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          for I in PLL_Params_19_2MHz'Range loop
             if PLL_Params_19_2MHz (I).Bandwidth = Bandwidth then
                Params := PLL_Params_19_2MHz (I).P;
+               -- Display WA #22010492432: ehl, tgl, adl-p
+               -- Program half of the nominal DCO divider fraction value
+               -- for 38.4 MHz refclk
+               --if Refclk = 38_400_000 then
+               --   Params.DCO_Fraction := Shift_Right (Params.DCO_Fraction, 1);
+               --end if;
                Success := True;
                exit;
             end if;
@@ -241,14 +250,13 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
       DCO_Found : Boolean := False;
       PDiv : PDiv_Range := PDiv_Range'First;
       QDiv : QDiv_Range := QDiv_Range'First;
-      KDiv : KDiv_Range := QDiv_Range'First;
+      KDiv : KDiv_Range := KDiv_Range'First;
       Refclk_Freq : Frequency_Type;
    begin
       Success := False;
       for Candidate of Candidates loop
          declare
-            DCO : constant Frequency_Type := AFE_Clk *
-               Frequency_Type (Candidate);
+            DCO : constant Frequency_Type := AFE_Clk * Candidate;
             DCO_Centrality : constant Frequency_Type := abs (DCO - DCO_Mid);
          begin
             if DCO <= DCO_Max and DCO >= DCO_Min and
@@ -324,6 +332,7 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          Params.DCO_Integer := Word32 (Best_DCO);
          Params.DCO_Fraction := Fraction_Part (Best_DCO);
       end;
+
       Success := True;
    end Calc_HDMI_PLL_Dividers;
 
@@ -349,11 +358,16 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          Mask     => DPLL_ENABLE_POWER_ENABLE);
       Registers.Wait_Set_Mask
         (Register => DPLL_ENABLE (PLL),
-         Mask     => DPLL_ENABLE_POWER_STATE);
+         Mask     => DPLL_ENABLE_POWER_STATE,
+         Success  => Success);
 
-      Registers.Write
-        (Register => DPLL_SSC (PLL),
-         Value    => (if Port_Cfg.Display = DP then DPLL_SSC_DP else 0));
+      if not Success then
+         return;
+      end if;
+
+      --Registers.Write
+      --  (Register => DPLL_SSC (PLL),
+      --   Value    => (if Port_Cfg.Display = DP then DPLL_SSC_DP else 0));
 
       Registers.Write
         (Register => DPLL_CFGCR0 (PLL),
@@ -366,7 +380,6 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
                   Word32(Params.QDiv_Mode) * 2 ** 9 or
                   Word32(Params.KDiv) * 2 ** 6 or
                   Word32(Params.PDiv) * 2 ** 2);
-
       Registers.Posting_Read(DPLL_CFGCR1 (PLL));
 
       Registers.Set_Mask
@@ -374,8 +387,8 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          Mask     => DPLL_ENABLE_PLL_ENABLE);
       Registers.Wait_Set_Mask
         (Register => DPLL_ENABLE (PLL),
-         Mask     => DPLL_ENABLE_PLL_LOCK);
-      Success := True;
+         Mask     => DPLL_ENABLE_PLL_LOCK,
+         Success  => Success);
    end On;
 
    procedure Free (PLL : T)

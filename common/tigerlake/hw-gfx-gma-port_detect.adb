@@ -27,13 +27,11 @@ is
    SHOTPLUG_CTL_HPD_INPUT_ENABLE : constant Digital_Port_Value :=
      (DIGI_B => 1 * 2 **  4,
       DIGI_C => 1 * 2 ** 12,
-      DIGI_D => 1 * 2 ** 20,
       DIGI_A => 1 * 2 ** 28,
       others => 0);
    SHOTPLUG_CTL_HPD_STATUS : constant Digital_Port_Value :=
      (DIGI_B => 3 * 2 **  0,
       DIGI_C => 3 * 2 **  8,
-      DIGI_D => 3 * 2 ** 16,
       DIGI_A => 3 * 2 ** 24,
       others => 0);
    procedure Initialize
@@ -41,6 +39,7 @@ is
       Internal_Detected : Boolean;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      -- only for DDI_A :-(
       if Config.Has_Presence_Straps and not Config.Ignore_Presence_Straps then
          Registers.Is_Set_Mask
            (Register => Registers.DDI_BUF_CTL_A,

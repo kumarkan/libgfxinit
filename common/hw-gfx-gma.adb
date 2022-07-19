@@ -53,25 +53,31 @@ package body HW.GFX.GMA
 is
    pragma Disable_Atomic_Synchronization;
 
-   subtype Port_Name is String (1 .. 8);
+   subtype Port_Name is String (1 .. 10);
    type Port_Name_Array is array (Port_Type) of Port_Name;
    Port_Names : constant Port_Name_Array :=
-     (Disabled => "Disabled",
-      LVDS     => "LVDS    ",
-      eDP      => "eDP     ",
-      DP1      => "DP1     ",
-      DP2      => "DP2     ",
-      DP3      => "DP3     ",
-      HDMI1    => "HDMI1   ",
-      HDMI2    => "HDMI2   ",
-      HDMI3    => "HDMI3   ",
-      Analog   => "Analog  ",
-      USBC1    => "USBC 1  ",
-      USBC2    => "USBC 2  ",
-      USBC3    => "USBC 3  ",
-      USBC4    => "USBC 4  ",
-      USBC5    => "USBC 5  ",
-      USBC6    => "USBC 6  ");
+     (Disabled => "Disabled  ",
+      LVDS       => "LVDS      ",
+      eDP        => "eDP       ",
+      DP1        => "DP1       ",
+      DP2        => "DP2       ",
+      DP3        => "DP3       ",
+      HDMI1      => "HDMI1     ",
+      HDMI2      => "HDMI2     ",
+      HDMI3      => "HDMI3     ",
+      Analog     => "Analog    ",
+      USBC1_DP   => "USBC1-DP  ",
+      USBC2_DP   => "USBC2-DP  ",
+      USBC3_DP   => "USBC3-DP  ",
+      USBC4_DP   => "USBC4-DP  ",
+      USBC5_DP   => "USBC5-DP  ",
+      USBC6_DP   => "USBC6-DP  ",
+      USBC1_HDMI => "USBC1-HDMI",
+      USBC2_HDMI => "USBC2-HDMI",
+      USBC3_HDMI => "USBC3-HDMI",
+      USBC4_HDMI => "USBC4-HDMI",
+      USBC5_HDMI => "USBC5-HDMI",
+      USBC6_HDMI => "USBC6-HDMI");
 
    package Dev is new HW.PCI.Dev (PCI.Address'(0, 2, 0));
 
@@ -90,9 +96,20 @@ is
    Linear_FB_Base : Word64;
 
    ----------------------------------------------------------------------------
+   PCH_RAWCLK_TGL_RAWCLK_NUM : constant := 1 * 2 * 11;
 
-   PCH_RAWCLK_FREQ_MASK : constant :=
-     (if Config.Has_Fractional_RawClk then 16#3fff# * 2 ** 16 else 16#3ff# * 2 ** 0);
+   function PCH_RAWCLK_FREQ_MASK return Word32 is
+      Mask : Word32;
+   begin
+      if Config.Has_Type_C_Ports then
+         Mask := 16#ffff_ffff#;
+      elsif Config.Has_Fractional_RawClk then
+         Mask := 16#3fff# * 2 ** 16;
+      else
+         Mask := 16#3ff# * 2 ** 0;
+      end if;
+      return Mask;
+   end PCH_RAWCLK_FREQ_MASK;
 
    function PCH_RAWCLK_FREQ (Freq : Frequency_Type) return Word32
    is
@@ -106,6 +123,10 @@ is
                Freq32 := Freq32 or Shift_Left
                  (Word32 (Div_Round_Closest (1_000, Fraction_K) - 1), 26);
             end if;
+
+            if Config.Has_Type_C_Ports then
+	       Freq32 := Freq32 or PCH_RAWCLK_TGL_RAWCLK_NUM;
+	    end if;
             return Freq32;
          end;
       else

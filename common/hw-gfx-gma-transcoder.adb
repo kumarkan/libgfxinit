@@ -15,6 +15,7 @@
 with HW.Debug;
 with GNAT.Source_Info;
 
+with HW.GFX.GMA.Config_Helpers;
 with HW.GFX.GMA.DP_Info;
 
 package body HW.GFX.GMA.Transcoder is
@@ -47,6 +48,19 @@ package body HW.GFX.GMA.Transcoder is
       DIGI_C => 3 * 2 ** 29,
       DIGI_D => 4 * 2 ** 29,
       DIGI_E => 5 * 2 ** 29);
+
+   function TGL_TRANS_CLK_SEL_PORT (Port : TGL_Digital_Port) return Word32 is
+   (case Port is
+    when DIGI_A  => 1 * 2 ** 28,
+    when DIGI_B  => 2 * 2 ** 28,
+    when DIGI_C  => 3 * 2 ** 28,
+    when DDI_TC1 => 4 * 2 ** 28,
+    when DDI_TC2 => 5 * 2 ** 28,
+    when DDI_TC3 => 6 * 2 ** 28,
+    when DDI_TC4 => 7 * 2 ** 28,
+    when DDI_TC5 => 8 * 2 ** 28,
+    when DDI_TC6 => 9 * 2 ** 28,
+    when others  => 0);
 
    TRANS_CONF_ENABLE          : constant := 1 * 2 ** 31;
    TRANS_CONF_ENABLED_STATUS  : constant := 1 * 2 ** 30;
@@ -84,6 +98,21 @@ package body HW.GFX.GMA.Transcoder is
       DIGI_C => 2 * 2 ** 28,
       DIGI_D => 3 * 2 ** 28,
       DIGI_E => 4 * 2 ** 28);
+
+   function TGL_DDI_FUNC_CTL_DDI_SELECT (Port : TGL_Digital_Port)
+      return Word32
+   is
+     (case Port is
+      when DIGI_A  => 1 * 2 ** 27,
+      when DIGI_B  => 2 * 2 ** 27,
+      when DIGI_C  => 3 * 2 ** 27,
+      when DDI_TC1 => 4 * 2 ** 27,
+      when DDI_TC2 => 5 * 2 ** 27,
+      when DDI_TC3 => 6 * 2 ** 27,
+      when DDI_TC4 => 7 * 2 ** 27,
+      when DDI_TC5 => 8 * 2 ** 27,
+      when DDI_TC6 => 9 * 2 ** 27,
+      when others  => 0);
 
    type DDI_Mode_Array is array (Display_Type) of Word32;
    DDI_FUNC_CTL_MODE_SELECT : constant DDI_Mode_Array :=
@@ -205,7 +234,8 @@ package body HW.GFX.GMA.Transcoder is
 
       if Config.Has_Trans_Clk_Sel and then
          Trans.CLK_SEL /= Registers.Invalid_Register and then
-         Port_Cfg.Port in Digital_Port
+         Is_Digital_Port (Port_Cfg.Port) and then
+         not Config.Need_Early_Transcoder_Setup
       then
          Registers.Write
            (Register => Trans.CLK_SEL,
@@ -228,6 +258,59 @@ package body HW.GFX.GMA.Transcoder is
 
    ----------------------------------------------------------------------------
 
+   procedure Enable_Pipe_Clock (Pipe : Pipe_Index; Port_Cfg : Port_Config)
+   is
+      Trans : Transcoder_Regs renames
+               Transcoders (Get_Idx (Pipe, Port_Cfg.Port));
+   begin
+      if Config.Need_Early_Transcoder_Setup then
+         Registers.Unset_And_Set_Mask
+           (Register   => Trans.CLK_SEL,
+	    Mask_Unset => 16#f000_0000#,
+            Mask_Set   => TGL_TRANS_CLK_SEL_PORT (Port_Cfg.Port));
+      end if;
+   end Enable_Pipe_Clock;
+
+   ----------------------------------------------------------------------------
+
+   procedure Configure (Pipe : Pipe_Index; Port_Cfg : Port_Config; Scale : Boolean)
+   is
+      Trans : Transcoder_Regs renames
+               Transcoders (Get_Idx (Pipe, Port_Cfg.Port));
+      Lane_Count : constant DP_Lane_Count :=
+        (if Port_Cfg.Is_FDI then Port_Cfg.FDI.Lane_Count else Port_Cfg.DP.Lane_Count);
+      EDP_Select : constant Word32 :=
+        (if Config.Has_Type_C_Ports
+	 then 0
+	 else
+	   (if Pipe = Primary and
+            (not Config.Use_PDW_For_EDP_Scaling or else not Scale)
+            then
+               DDI_FUNC_CTL_EDP_SELECT_ALWAYS_ON
+            else
+               DDI_FUNC_CTL_EDP_SELECT (Pipe)));
+      DDI_Select : constant Word32 :=
+        (if Config.Has_Type_C_Ports and Port_Cfg.Port in TGL_Digital_Port then
+         TGL_DDI_FUNC_CTL_DDI_SELECT (Port_Cfg.Port) else
+         DDI_FUNC_CTL_DDI_SELECT (Port_Cfg.Port));
+   begin
+      if Config.Has_Pipe_DDI_Func then
+         if Is_Digital_Port (Port_Cfg.Port) then
+            Registers.Write
+              (Register => Trans.DDI_FUNC_CTL,
+               Value    => DDI_Select or
+                        DDI_FUNC_CTL_MODE_SELECT (Port_Cfg.Display) or
+                        DDI_FUNC_CTL_BPC (Port_Cfg.Mode.BPC) or
+                        DDI_FUNC_CTL_VSYNC (Port_Cfg.Mode.V_Sync_Active_High) or
+                        DDI_FUNC_CTL_HSYNC (Port_Cfg.Mode.H_Sync_Active_High) or
+                        EDP_Select or
+                        DDI_FUNC_CTL_PORT_WIDTH (Lane_Count));
+         end if;
+      end if;      
+   end Configure;
+
+   ----------------------------------------------------------------------------
+
    procedure On
      (Pipe     : Pipe_Index;
       Port_Cfg : Port_Config;
@@ -236,27 +319,15 @@ package body HW.GFX.GMA.Transcoder is
    is
       Trans : Transcoder_Regs renames
                Transcoders (Get_Idx (Pipe, Port_Cfg.Port));
-      Lane_Count : constant DP_Lane_Count :=
-        (if Port_Cfg.Is_FDI then Port_Cfg.FDI.Lane_Count else Port_Cfg.DP.Lane_Count);
-      EDP_Select : constant Word32 :=
-        (if Pipe = Primary and
-            (not Config.Use_PDW_For_EDP_Scaling or else not Scale)
-         then
-            DDI_FUNC_CTL_EDP_SELECT_ALWAYS_ON
-         else
-            DDI_FUNC_CTL_EDP_SELECT (Pipe));
    begin
-      if Config.Has_Pipe_DDI_Func and Port_Cfg.Port in Digital_Port then
-         Registers.Write
+      if not Config.Need_Early_Transcoder_Setup then
+         Configure (Pipe, Port_Cfg, Scale);
+      end if;
+
+      if Config.Has_Pipe_DDI_Func and Is_Digital_Port (Port_Cfg.Port) then
+         Registers.Set_Mask
            (Register => Trans.DDI_FUNC_CTL,
-            Value    => DDI_FUNC_CTL_ENABLE or
-                        DDI_FUNC_CTL_DDI_SELECT (Port_Cfg.Port) or
-                        DDI_FUNC_CTL_MODE_SELECT (Port_Cfg.Display) or
-                        DDI_FUNC_CTL_BPC (Port_Cfg.Mode.BPC) or
-                        DDI_FUNC_CTL_VSYNC (Port_Cfg.Mode.V_Sync_Active_High) or
-                        DDI_FUNC_CTL_HSYNC (Port_Cfg.Mode.H_Sync_Active_High) or
-                        EDP_Select or
-                        DDI_FUNC_CTL_PORT_WIDTH (Lane_Count));
+            Mask     => DDI_FUNC_CTL_ENABLE);
       end if;
 
       Registers.Write

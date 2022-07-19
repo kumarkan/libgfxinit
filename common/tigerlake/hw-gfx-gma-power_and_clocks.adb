@@ -58,17 +58,17 @@ package body HW.GFX.GMA.Power_And_Clocks is
    MBUS_ABOX_CTL_BT_CREDITS_POOL2_SHIFT           : constant := 8;
 
    MBUS_ABOX_MASK : constant := Word32'(
-                       MBUS_ABOX_CTL_BW_CREDITS_MASK or
-                       MBUS_ABOX_CTL_B_CREDITS_MASK or
-                       MBUS_ABOX_CTL_BT_CREDITS_POOL1_MASK or
-                       MBUS_ABOX_CTL_BT_CREDITS_POOL2_MASK);
+      MBUS_ABOX_CTL_BW_CREDITS_MASK or
+      MBUS_ABOX_CTL_B_CREDITS_MASK or
+      MBUS_ABOX_CTL_BT_CREDITS_POOL1_MASK or
+      MBUS_ABOX_CTL_BT_CREDITS_POOL2_MASK);
    MBUS_ABOX_CREDITS : constant := Word32'(
-                       1 * 2 ** MBUS_ABOX_CTL_BW_CREDITS_SHIFT or
-                       1 * 2 ** MBUS_ABOX_CTL_B_CREDITS_SHIFT or
-                       16 * 2 ** MBUS_ABOX_CTL_BT_CREDITS_POOL1_SHIFT or
-                       16 * 2 ** MBUS_ABOX_CTL_BT_CREDITS_POOL2_SHIFT);
+      1 * 2 ** MBUS_ABOX_CTL_BW_CREDITS_SHIFT or
+      1 * 2 ** MBUS_ABOX_CTL_B_CREDITS_SHIFT or
+      16 * 2 ** MBUS_ABOX_CTL_BT_CREDITS_POOL1_SHIFT or
+      16 * 2 ** MBUS_ABOX_CTL_BT_CREDITS_POOL2_SHIFT);
 
-   type MBUSRegs is array (natural range 0 .. 2) of Registers.Registers_Index;
+   type MBUSRegs is array (Natural range 0 .. 2) of Registers.Registers_Index;
    MBUS_ABOX_CTL : constant MBUSRegs := MBUSRegs'
      (Registers.MBUS_ABOX_CTL,
       Registers.MBUS_ABOX1_CTL,
@@ -83,6 +83,20 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
    ----------------------------------------------------------------------------
 
+   function HIP_INDEX_REG (A : AUX_USBC_Domain) return Registers.Registers_Index
+   is (if A <= AUX_USBC4
+       then Registers.HIP_INDEX_REG0
+       else Registers.HIP_INDEX_REG1);
+
+   function HIP_INDEX_VAL (A : AUX_USBC_Domain) return Word32 is
+     (case A is
+      when AUX_USBC1 => 1 * 2 ** 0,
+      when AUX_USBC2 => 1 * 2 ** 8,
+      when AUX_USBC3 => 1 * 2 ** 16,
+      when AUX_USBC4 => 1 * 2 ** 24,
+      when AUX_USBC5 => 1 * 2 ** 0,
+      when AUX_USBC6 => 1 * 2 ** 8);
+
    type DKL_Regs is array (AUX_USBC_Domain) of Registers.Registers_Index;
    DKL_CMN_UC_DW_27 : constant DKL_Regs := DKL_Regs'
      (AUX_USBC1 => Registers.DKL_CMN_UC_DW_27_1,
@@ -91,6 +105,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
       AUX_USBC4 => Registers.DKL_CMN_UC_DW_27_4,
       AUX_USBC5 => Registers.DKL_CMN_UC_DW_27_5,
       AUX_USBC6 => Registers.DKL_CMN_UC_DW_27_6);
+
+   ----------------------------------------------------------------------------
 
    function Power_Domain_Type (PD : Power_Domain) return Power_Domain_Types is
      (if    PD in PW_Domain then Power_Well
@@ -118,6 +134,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
       (1 * 2 ** (2 * PW_Index (PW) + 1));
    function PW_State_Mask (PW : PW_Domain) return Word32 is
       (1 * 2 ** (2 * PW_Index (PW)));
+
+   ----------------------------------------------------------------------------
 
    function DDI_Index (DDI : DDI_Domain) return Natural is
      (case DDI is
@@ -152,19 +170,7 @@ package body HW.GFX.GMA.Power_And_Clocks is
    function AUX_State_Mask (AUX : AUX_Domain) return Word32 is
       (1 * 2 ** (2 * AUX_Index (AUX)));
 
-   function HIP_INDEX_REG (A : AUX_USBC_Domain) return Registers.Registers_Index
-   is (if A <= AUX_USBC4
-       then Registers.HIP_INDEX_REG0
-       else Registers.HIP_INDEX_REG1);
-
-   function HIP_INDEX_VAL (A : AUX_USBC_Domain) return Word32 is
-     (case A is
-      when AUX_USBC1 => 1 * 2 ** 0,
-      when AUX_USBC2 => 1 * 2 ** 8,
-      when AUX_USBC3 => 1 * 2 ** 16,
-      when AUX_USBC4 => 1 * 2 ** 24,
-      when AUX_USBC5 => 1 * 2 ** 0,
-      when AUX_USBC6 => 1 * 2 ** 8);
+   ----------------------------------------------------------------------------
 
    FUSE_STATUS_PG0_DIST_STATUS                    : constant := 1 * 2 ** 27;
    type Power_Well_Values is array (PW_Domain) of Word32;
@@ -189,10 +195,11 @@ package body HW.GFX.GMA.Power_And_Clocks is
    CDCLK_PLL_ENABLE_PLL_ENABLE                    : constant := 1 * 2 ** 31;
    CDCLK_PLL_ENABLE_PLL_LOCK                      : constant := 1 * 2 ** 30;
    CDCLK_CD2X_DIV_SEL_MASK                        : constant := 3 * 2 ** 22;
-   CDCLK_CD2X_DIV_SEL_1                           : constant := 0 * 2 ** 22;
-   CDCLK_CD2X_DIV_SEL_1_5                         : constant := 1 * 2 ** 22;
-   CDCLK_CD2X_DIV_SEL_2                           : constant := 2 * 2 ** 22;
-   CDCLK_CD2X_DIV_SEL_4                           : constant := 3 * 2 ** 22;
+   --CDCLK_CD2X_DIV_SEL_1                           : constant := 0 * 2 ** 22;
+   --CDCLK_CD2X_DIV_SEL_1_5                         : constant := 1 * 2 ** 22;
+   --CDCLK_CD2X_DIV_SEL_2                           : constant := 2 * 2 ** 22;
+   --CDCLK_CD2X_DIV_SEL_4                           : constant := 3 * 2 ** 22;
+   CDCLK_CD2X_DIV_2                               : constant := 2 * 2 ** 22;
    CDCLK_CD2X_PIPE_NONE                           : constant := 7 * 2 ** 19;
    CDCLK_CTL_CD_FREQ_DECIMAL_MASK                 : constant := 16#7ff#;
 
@@ -278,14 +285,14 @@ package body HW.GFX.GMA.Power_And_Clocks is
          Configs (Tertiary).Port = Port);
    begin
       return (case PD is
-         when PW1       => Any_Port_Is (eDP) or Any_Port_Is (USBC1),
-         when PW2       => Any_Port_is (eDP) or Any_Port_Is (USBC1),
-         when PW3       => Any_Port_Is (DP1) or Any_Port_Is (HDMI1) or
-                           Any_Port_Is (USBC2),
-         when PW4       => Any_Port_Is (DP2) or Any_Port_Is (HDMI2) or
-                           Any_Port_Is (USBC3),
+         when PW1       => Any_Port_Is (eDP) or Any_Port_Is (USBC1_DP) or Any_Port_is (USBC1_HDMI),
+         when PW2       => Any_Port_is (eDP) or Any_Port_Is (USBC1_DP) or Any_Port_is (USBC1_HDMI),
+         when PW3       => Any_Port_Is (eDP) or Any_Port_Is (DP1) or Any_Port_Is (HDMI1) or
+                           Any_Port_Is (USBC2_DP) or Any_Port_Is (USBC2_HDMI),
+         when PW4       => Any_Port_Is (eDP) or Any_Port_Is (DP2) or Any_Port_Is (HDMI2) or
+                           Any_Port_Is (USBC3_DP) or Any_Port_Is (USBC3_HDMI),
          when PW5       => Any_Port_Is (DP3) or Any_Port_is (HDMI3) or
-                           Any_Port_Is (USBC4),
+                           Any_Port_Is (USBC4_DP) or Any_Port_Is (USBC4_HDMI),
          when DDI_A     => Any_Port_Is (eDP),
          when AUX_A     => Any_Port_Is (eDP),
          when others    => False);
@@ -307,6 +314,23 @@ package body HW.GFX.GMA.Power_And_Clocks is
          when DSSM_REFERENCE_FREQUENCY_38_4MHZ => 38_400_000,
          when others                           => 24_000_000);
    end Get_Refclk;
+
+   procedure Get_RawClk (Rawclk : out Frequency_Type)
+   is
+      Raw_Frequency_24_MHz : Boolean;
+      SFUSE_STRAP_RAW_FREQUENCY : constant := 1 * 2 ** 8;
+   begin
+      Registers.Is_Set_Mask
+        (Register => Registers.SFUSE_STRAP,
+	 Mask     => SFUSE_STRAP_RAW_FREQUENCY,
+	 Result   => Raw_Frequency_24_MHz);
+	 
+      if Raw_Frequency_24_MHz then
+         Rawclk := 24_000_000;
+      else
+         Rawclk := 19_200_000;
+      end if;
+   end Get_RawClk;
 
    procedure Get_Max_CDClk (CDClk : out Config.CDClk_Range)
    is
@@ -380,24 +404,19 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
       function CDCLK_CTL_CD_FREQ_DECIMAL (Freq : Frequency_Type) return Word32 is
       begin
-         return Word32 (2 * (Freq / 1_000_000 - 1));
+         -- Weirdest representation: CDClk - 1MHz in 10.1 (10 + 1 fractional bit)
+         return Word32 (Div_Round_Closest (Int64 (Freq) - 1_000_000, 500_000));
       end CDCLK_CTL_CD_FREQ_DECIMAL;
 
       Success : Boolean;
-      CD2X : Word32;
+      CD2X : Word32 := 0;
       PLL_Ratio : Word32;
       CDClk : constant Config.CDClk_Range :=
          Normalize_CDClk (Frequency_Type'Min (CDClk_In, Config.Max_CDClk));
       Refclk_Freq : Frequency_Type;
-      VCO : Frequency_Type;
+      --VCO : Frequency_Type;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-      Debug.Put ("CDClk_In is ");
-      Debug.Put_Word32 (Word32 (CDClk_In));
-      Debug.New_Line;
-      Debug.Put ("CDClk is ");
-      Debug.Put_Word32 (Word32 (CDClk));
-      Debug.New_Line;
 
       Get_Refclk (Refclk_Freq);
       case Refclk_Freq is
@@ -407,20 +426,29 @@ package body HW.GFX.GMA.Power_And_Clocks is
          when others => PLL_Ratio := 0;
       end case;
 
+      Debug.Put_Line  ("CDClk is  : ");
+      Debug.Put_Int64 (CDClk);
+      Debug.New_Line;
+      Debug.Put_Reg32 ("PLL Ratio : ", PLL_Ratio);
+      Debug.Put_Reg32 ("Refclk    : ", Word32 (Refclk_Freq));
       if PLL_Ratio = 0 then
          pragma Debug (Debug.Put_Line
                        ("ERROR: Invalid Refclk frequency, bad hardware?"));
          return;
       end if;
 
-      VCO := (Refclk_Freq / 1000) * Frequency_Type (PLL_Ratio);
-      CD2X :=
-         (case (Div_Round_Closest (VCO, CDClk / 1000)) is
-          when 2 => CDCLK_CD2X_DIV_SEL_1,
-          when 3 => CDCLK_CD2X_DIV_SEL_1_5,
-          when 4 => CDCLK_CD2X_DIV_SEL_2,
-          when 8 => CDCLK_CD2X_DIV_SEL_4,
-          when others => 0);
+      --VCO := (Refclk_Freq / 1000) * Frequency_Type (PLL_Ratio);
+      --CD2X :=
+      --   (case (Div_Round_Closest (VCO, CDClk / 1000)) is
+      --    when 2 => CDCLK_CD2X_DIV_SEL_1,
+      --    when 3 => CDCLK_CD2X_DIV_SEL_1_5,
+      --    when 4 => CDCLK_CD2X_DIV_SEL_2,
+      --    when 8 => CDCLK_CD2X_DIV_SEL_4,
+      --    when others => 0);
+
+      if CdClk = 324_000_000 or CDClk = 326_000_000 then
+         CD2X := CDCLK_CD2X_DIV_2;
+      end if;
 
       PCode.Mailbox_Request
         (Mbox       => TGL_PCODE_CDCLK_CONTROL,
@@ -435,28 +463,44 @@ package body HW.GFX.GMA.Power_And_Clocks is
          return;
       end if;
 
-      Registers.Unset_Mask
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask => CDCLK_PLL_ENABLE_PLL_ENABLE);
-      Registers.Wait_Unset_Mask
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask     => CDCLK_PLL_ENABLE_PLL_LOCK,
-         TOut_MS => 1);
+      --Registers.Unset_Mask
+      --  (Register => Registers.CDCLK_PLL_ENABLE,
+      --   Mask => CDCLK_PLL_ENABLE_PLL_ENABLE);
+      --Registers.Wait_Unset_Mask
+      --  (Register => Registers.CDCLK_PLL_ENABLE,
+      --   Mask     => CDCLK_PLL_ENABLE_PLL_LOCK,
+      --   TOut_MS => 1);
 
-      Registers.Write
+      Registers.Unset_And_Set_Mask
+        (Register   => Registers.CDCLK_PLL_ENABLE,
+	 Mask_Unset => CDCLK_PLL_ENABLE_PLL_RATIO_MASK,
+	 Mask_Set   => PLL_Ratio);
+
+      Registers.Set_Mask
         (Register => Registers.CDCLK_PLL_ENABLE,
-         Value => PLL_Ratio);
-      Registers.Write
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Value    => CDCLK_PLL_ENABLE_PLL_ENABLE or PLL_Ratio);
+         Mask     => CDCLK_PLL_ENABLE_PLL_ENABLE);
       Registers.Wait_Set_Mask
         (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask     => CDCLK_PLL_ENABLE_PLL_LOCK,
-         TOut_MS => 1);
+         Mask     => CDCLK_PLL_ENABLE_PLL_LOCK);
 
       Registers.Write
         (Register => Registers.CDCLK_CTL,
-         Value => CDCLK_CTL_CD_FREQ_DECIMAL (CDClk) or
+         Value => (case CDClk is
+	           when 168_000_000 => 16#14e#,
+		   when 172_800_000 => 16#158#,
+		   when 179_200_000 => 16#164#,
+		   when 180_000_000 => 16#166#,
+		   when 192_000_000 => 16#17e#,
+		   when 307_200_000 => 16#264#,
+		   when 312_000_000 => 16#26e#,
+		   when 324_000_000 => 16#286#,
+		   when 326_400_000 => 16#28b#,
+		   when 480_000_000 => 16#3be#,
+		   when 552_000_000 => 16#44e#,
+		   when 556_800_000 => 16#458#,
+		   when 648_000_000 => 16#50e#,
+		   when 652_800_000 => 16#518#,
+		   when others      => CDCLK_CTL_CD_FREQ_DECIMAL (CDClk)) or
                   CDCLK_CD2X_PIPE_NONE or
                   CD2X);
 
@@ -470,6 +514,9 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
    procedure Configure_Bandwidth_Buddy
    is
+      BW_BUDDY_DISABLE : constant := 1 * 2 ** 31;
+      BW_BUDDY_TLB_REQ_TIMER_MASK : constant := 16#3f_0000#;
+      
       type DRAM_Module_Type is (DDR4, DDR5, LPDDR4, LPDDR5);
       type Bw_Buddy_Info is record
          DRAM_Channels : Natural;
@@ -477,19 +524,31 @@ package body HW.GFX.GMA.Power_And_Clocks is
          BW_BUDDY_MASK : Word32;
       end record;
       type Bw_Buddy_Info_Array is array (Natural range 0 .. 7) of Bw_Buddy_Info;
+      Buddy_Info_Wa : constant Bw_Buddy_Info_Array :=
+        -- wa_1409767108_buddy_page_masks
+        ((1, LPDDR4, 1),
+         (1, LPDDR5, 1),
+	 (1, DDR4,   1),
+         (1, DDR5,   1),
+         (2, LPDDR4, 3),
+         (2, LPDDR5, 3),
+         (2, DDR4,   3),
+         (2, DDR5,   3));
       Buddy_Info : constant Bw_Buddy_Info_Array :=
-        ((1, DDR4,   16#0f#),
-         (1, DDR5,   16#0f#),
+        -- tgl_buddy_page_masks
+	((1, DDR4,   16#f#),
+         (1, DDR5,   16#f#),
          (2, LPDDR4, 16#1c#),
          (2, LPDDR5, 16#1c#),
-         (2, DDR4,   16#1f#),
+	 (2, DDR4,   16#1f#),
          (2, DDR5,   16#1e#),
-         (4, LPDDR4, 16#38#),
-         (4, LPDDR5, 16#38#));
+         (4, LPDDR4, 16#1c#), -- #38#
+         (4, LPDDR5, 16#1c#)); -- #38#
       Result : Word64;
       Module_Type: DRAM_Module_Type;
       Channels : Natural;
       Success : Boolean;
+      Found : Boolean := False;
    begin
       PCode.Mailbox_Read(MBox => TGL_PCODE_MEM_SUBSYSTEM_INFO or
                                  TGL_PCODE_MEM_SS_READ_GLOBAL_INFO,
@@ -504,34 +563,52 @@ package body HW.GFX.GMA.Power_And_Clocks is
       Debug.Put ("Pcode says DRAM type is ");
       case (Result and 16#f#) is
          when 0 => Module_Type := DDR4;
-                   Debug.Put("DDR4");
-         when 1 => Module_Type :=
-                   DDR5; Debug.Put("DDR5");
+                   Debug.Put_Line("DDR4");
+         when 1 => Module_Type := DDR5;
+	           Debug.Put_Line("DDR5");
          when 2 => Module_Type := LPDDR5;
-                   Debug.Put("LPDDR5");
+                   Debug.Put_Line("LPDDR5");
          when 3 => Module_Type := LPDDR4;
-                   Debug.Put("LPDDR4");
+                   Debug.Put_Line("LPDDR4");
          when others =>
             pragma Debug (Debug.Put_Line ("ERROR: Invalid DRAM Module Type."));
             return;
       end case;
 
       Channels := Natural(Shift_Right(Result and 16#f0#, 4));
-      Debug.Put (" and it has ");
-      Debug.Put_Int32 (Int32(Channels));
-      Debug.Put_Line (" channels");
+      Debug.Put_Reg32 ("DRAM channels: ", Word32(Channels));
+      Found := False;
       for I in Buddy_Info'Range loop
-         if Buddy_Info(I).DRAM_Type = Module_Type and then
-               Buddy_Info(I).DRAM_Channels = Channels then
+         if Buddy_Info(I).DRAM_Type = Module_Type and
+               Buddy_Info(I).DRAM_Channels = Channels
+	 then
             Registers.Set_Mask
               (Register => Registers.BW_BUDDY1_PAGE_MASK,
                Mask     => Buddy_Info(I).BW_BUDDY_MASK);
             Registers.Set_Mask
               (Register => Registers.BW_BUDDY2_PAGE_MASK,
                Mask     => Buddy_Info(I).BW_BUDDY_MASK);
+
+            -- Wa_22010178259:tgl,rkl 
+            Registers.Unset_And_Set_Mask
+	      (Register   => Registers.BW_BUDDY1_CTL,
+	       Mask_Unset => BW_BUDDY_TLB_REQ_TIMER_MASK,
+	       Mask_Set   => 8 * 2 ** 16);
+	    Registers.Unset_And_Set_Mask
+	      (Register   => Registers.BW_BUDDY2_CTL,
+	       Mask_Unset => BW_BUDDY_TLB_REQ_TIMER_MASK,
+	       Mask_Set   => 8 * 2 ** 16);
+
+	    Found := True;
             exit;
          end if;
       end loop;
+
+      if not Found then
+         Debug.Put_Line ("No BW buddy settings found, disabling.");
+         Registers.Write (Registers.BW_BUDDY1_CTL, BW_BUDDY_DISABLE);
+	 Registers.Write (Registers.BW_BUDDY2_CTL, BW_BUDDY_DISABLE);
+      end if;
    end Configure_Bandwidth_Buddy;
 
    ----------------------------------------------------------------------------
@@ -552,9 +629,9 @@ package body HW.GFX.GMA.Power_And_Clocks is
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
       -- Display WA #14011294188 ehl,tgl,jsl,rkl,adl-s
-      Registers.Set_Mask
-        (Register => Registers.PCH_DSPCLK_GATE_D,
-         Mask     => PCH_DPMGUNIT_CLOCK_GATE_DISABLE);
+      --Registers.Set_Mask
+      --  (Register => Registers.PCH_DSPCLK_GATE_D,
+      --   Mask     => PCH_DPMGUNIT_CLOCK_GATE_DISABLE);
 
       Registers.Set_Mask
         (Register => Registers.NDE_RSTWRN_OPT,
@@ -570,49 +647,62 @@ package body HW.GFX.GMA.Power_And_Clocks is
          Mask     => FUSE_STATUS_PG0_DIST_STATUS);
 
       PD_On (PW1);
-      PD_On (DDI_A);
-      PD_On (AUX_A);
 
       -- CD Clock enable sequence
       Get_Cur_CDClk (Config.CDClk);
       Get_Max_CDClk (Config.Max_CDClk);
 
-      Debug.Put ("Current CDClk (from reading mmio) is ");
-      Debug.Put_Word32 (Word32 (Config.CDClk));
-      Debug.New_Line;
       if Config.CDClk /= Default_CDClk_Freq then
          Set_CDClk (Default_CDClk_Freq);
       end if;
-      Get_RefClk (Config.Raw_Clock);
+
+      Get_RawClk (Config.Raw_Clock);
+
+      PD_On (PW2);
+      PD_On (PW3);
+      PD_On (PW4);
+      PD_On (DDI_A);
+      PD_On (AUX_A);
 
       -- Set DBUF Tracker State Service to 8
-      Registers.Unset_And_Set_Mask
-        (Register => Registers.DBUF_CTL,
-         Mask_Unset => DBUF_CTL_TRACKER_STATE_SERVICE_MASK,
-         Mask_Set   => 8 * 2 ** DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT);
+      --Registers.Unset_And_Set_Mask
+      --  (Register => Registers.DBUF_CTL,
+      --   Mask_Unset => DBUF_CTL_TRACKER_STATE_SERVICE_MASK,
+      --   Mask_Set   => 8 * 2 ** DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT);
+      --Registers.Unset_And_Set_Mask
+      --  (Register => Registers.DBUF_CTL_S2,
+      --   Mask_Unset => DBUF_CTL_TRACKER_STATE_SERVICE_MASK,
+      --   Mask_Set   => 8 * 2 ** DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT);
 
       -- Enable first DBUF
       Registers.Set_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_REQUEST);
+      Registers.Posting_Read (Registers.DBUF_CTL);
+
       -- Poll for DBUF power enable
       Registers.Wait_Set_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_STATE);
 
-      -- Setup MBUS credits
-      Registers.Unset_And_Set_Mask
-        (Register => MBUS_ABOX_CTL (1),
-         Mask_Unset => MBUS_ABOX_MASK,
-         Mask_Set => MBUS_ABOX_CREDITS);
-      Registers.Unset_And_Set_Mask
-        (Register => MBUS_ABOX_CTL (2),
-         Mask_Unset => MBUS_ABOX_MASK,
-         Mask_Set => MBUS_ABOX_CREDITS);
-
-      Configure_Bandwidth_Buddy;
-
-      -- Display WA #8470 tgl
       Registers.Set_Mask
-        (Register => Registers.GEN11_CHICKEN_DCPR_2,
-         Mask     => DCPR_MASK_MAXLATENCY_MEMUP_CLR or DCPR_MASK_LPMODE or
-                     DCPR_SEND_RESP_IMM or DCPR_CLEAR_MEMSTAT_DIS);
+        (Registers.GEN9_CLKGATE_DIS_0, 16#8000000#);
+
+      Registers.Set_Mask
+        (Registers.GEN9_CHICKEN_DPCR_3, 16#400000#);
+
+      -- Setup MBUS ABOX credits
+      for I in MBUS_ABOX_CTL'Range loop
+         Registers.Unset_And_Set_Mask
+           (Register => MBUS_ABOX_CTL (I),
+            Mask_Unset => MBUS_ABOX_MASK,
+            Mask_Set => MBUS_ABOX_CREDITS);
+      end loop;
+
+      -- MBUS DBOX credits... after plane programming
+      --Configure_Bandwidth_Buddy; -- can't find this in gfx peim
+
+      -- Display WA #14011508470 tgl,dg1,rkl,adl-s,adl-p
+      --Registers.Set_Mask
+      --  (Register => Registers.GEN11_CHICKEN_DCPR_2,
+      --   Mask     => DCPR_MASK_MAXLATENCY_MEMUP_CLR or DCPR_MASK_LPMODE or
+      --               DCPR_SEND_RESP_IMM or DCPR_CLEAR_MEMSTAT_DIS);
    end Initialize;
 
    procedure Limit_Dotclocks
@@ -680,15 +770,12 @@ package body HW.GFX.GMA.Power_And_Clocks is
       end loop;
    end Power_Down;
 
-   procedure Pre_All_Off
-   is
+   procedure Pre_All_Off is
    begin
       Transcoder.PSR_Off;
    end Pre_All_Off;
 
-   procedure Post_All_Off
-   is
-      Refclk_Freq : Frequency_Type;
+   procedure Post_All_Off is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
@@ -700,9 +787,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
       Registers.Unset_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_REQUEST);
       Registers.Wait_Unset_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_STATE);
 
-      Get_Refclk (Refclk_Freq);
-      Set_CDClk (Refclk_Freq);
-
+      PD_Off (DDI_A);
+      PD_Off (AUX_A);
       PD_Off (PW1);
    end Post_All_Off;
 

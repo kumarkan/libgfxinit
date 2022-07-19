@@ -12,25 +12,16 @@
 -- GNU General Public License for more details.
 --
 
-with HW.Debug;
-with GNAT.Source_Info;
-with HW.GFX.GMA.PLLs;
-
-private package HW.GFX.GMA.PLLs.Combo_Phy is
-
-   procedure On
-     (PLL      : in     T;
-      Port_Cfg : in     Port_Config;
-      Success  :    out Boolean);
-
-   procedure Free (PLL : T);
+package HW.GFX.GMA.Connectors.DDI is
 
    procedure Initialize;
 
-   procedure All_Off;
+   procedure Pre_On
+     (Pipe     : in     Pipe_Index;
+      Port_Cfg : in     Port_Config;
+      PLL_Hint : in     Word32;
+      Success  :    out Boolean);
 
-   type Value_Array is array (Configurable_DPLLs) of Word32;
-   Register_Value : constant Value_Array := Value_Array'
-     (DPLL0 => 0, DPLL1 => 1, DPLL4 => 2);
+   procedure Off (Pipe : Pipe_Index; Port : TGL_Digital_Port);
+end HW.GFX.GMA.Connectors.DDI;
 
-end HW.GFX.GMA.PLLs.Combo_Phy;

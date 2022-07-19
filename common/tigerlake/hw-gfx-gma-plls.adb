@@ -69,28 +69,28 @@ is
 
       for P in Configurable_DPLLs loop
          Success := PLLs (P).Use_Count /= 0 and
-	             PLLs (P).Use_Count /= Count_Range'Last and
-		     Config_Matches (PLLs (P));
-	 if Success then
-	    PLL := P;
-	    PLLs (PLL).Use_Count := PLLs (PLL).Use_Count + 1;
-	    return;
-	 end if;
+                     PLLs (P).Use_Count /= Count_Range'Last and
+                     Config_Matches (PLLs (P));
+         if Success then
+            PLL := P;
+            PLLs (PLL).Use_Count := PLLs (PLL).Use_Count + 1;
+            return;
+         end if;
       end loop;
 
       for P in Configurable_DPLLs loop
          if PLLs (P).Use_Count = 0 then
-	    PLL := P;
-	    Combo_Phy.On (PLL, Port_Cfg, Success);
-	    if Success then
-	       PLLs (PLL) :=
-	         (Use_Count   => 1,
-		  Used_For_DP => Port_Cfg.Display = DP,
-		  Link_Rate   => Port_Cfg.DP.Bandwidth,
-		  Mode        => Port_Cfg.Mode);
-	    end if;
-	    return;
-	 end if;
+            PLL := P;
+            Combo_Phy.On (PLL, Port_Cfg, Success);
+            if Success then
+               PLLs (PLL) :=
+                 (Use_Count   => 1,
+                  Used_For_DP => Port_Cfg.Display = DP,
+                  Link_Rate   => Port_Cfg.DP.Bandwidth,
+                  Mode        => Port_Cfg.Mode);
+            end if;
+            return;
+         end if;
       end loop;
 
       PLL := Invalid;
@@ -119,7 +119,7 @@ is
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
       if PLL in Configurable_DPLLs then
-	    return Combo_Phy.Register_Value (PLL);
+            return Combo_Phy.Register_Value (PLL);
       end if;
 
       return 0;

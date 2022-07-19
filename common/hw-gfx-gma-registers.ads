@@ -107,6 +107,7 @@ is
       GTIER,
       IIR,
       HOTPLUG_CTL,
+      DBUF_CTL_S2,
       ARB_CTL,
       DBUF_CTL,
       MBUS_ABOX_CTL,
@@ -117,7 +118,9 @@ is
       WM1_LP_ILK,
       WM2_LP_ILK,
       WM3_LP_ILK,
+      BW_BUDDY1_CTL,
       BW_BUDDY1_PAGE_MASK,
+      BW_BUDDY2_CTL,
       BW_BUDDY2_PAGE_MASK,
       WM_PIPE_C,
       WM_LINETIME_A,
@@ -156,6 +159,8 @@ is
       NDE_RSTWRN_OPT,
       GEN8_CHICKEN_DCPR_1,
       GEN11_CHICKEN_DCPR_2,
+      GEN9_CLKGATE_DIS_0,
+      GEN9_CHICKEN_DPCR_3,
       BLC_PWM_CPU_CTL2,
       BLC_PWM_CPU_CTL,
       DFSM,
@@ -175,6 +180,7 @@ is
       FDI_TX_CTL_A,
       PIPEA_DDI_FUNC_CTL,
       PIPEA_MSA_MISC,
+      TGL_DP_TP_STATUS_A,
       SRD_CTL_A,
       SRD_STATUS_A,
       HTOTAL_B,
@@ -203,6 +209,7 @@ is
       GMCH_PFIT_CONTROL,
       PIPEB_DDI_FUNC_CTL,
       PIPEB_MSA_MISC,
+      TGL_DP_TP_STATUS_B,
       SRD_CTL_B,
       SRD_STATUS_B,
       HTOTAL_C,
@@ -221,8 +228,10 @@ is
       FDI_TX_CTL_C,
       PIPEC_DDI_FUNC_CTL,
       PIPEC_MSA_MISC,
+      TGL_DP_TP_STATUS_C,
       SRD_CTL_C,
       SRD_STATUS_C,
+      TGL_DP_TP_STATUS_D,
       DDI_BUF_CTL_A,
       DDI_AUX_CTL_A,
       DDI_AUX_DATA_A_1,
@@ -403,8 +412,8 @@ is
       DDI_BUF_TRANS_E_S8T1,
       DDI_BUF_TRANS_E_S8T2,
       DDI_BUF_TRANS_E_S9T1,
-      DDI_BUF_TRANS_E_S9T2,
-      AUD_VID_DID,
+      DDI_BUF_TRANS_E_S9T2, -- 4fcc
+      AUD_VID_DID, -- 5020
       PFA_WIN_POS,
       PFA_WIN_SZ,
       PFA_CTL_1,
@@ -477,21 +486,32 @@ is
       BXT_PORT_TX_DW14_LN0_B,
       BXT_PORT_TX_DW14_LN1_B,
       PORT_PCS_DW1_GRP_B,
-      PORT_TX_DW8_GRP_B,
-      BXT_PORT_TX_DW14_LN2_B,
-      BXT_PORT_TX_DW14_LN3_B,
-      PORT_PCS_DW1_LN0_B,
-      BXT_PORT_PCS_DW10_01_C,
-      BXT_PORT_PCS_DW12_01_C,
-      PORT_TX_DW8_LN0_B,
-      BXT_PORT_TX_DW2_LN0_C,
+      PORT_TX_DW2_GRP_B,      --c688
+      PORT_TX_DW4_GRP_B,      --c690
+      PORT_TX_DW5_GRP_B,      --c694
+      PORT_TX_DW7_GRP_B,      --c69c
+      PORT_TX_DW8_GRP_B,      --c6a0
+      BXT_PORT_TX_DW14_LN2_B, --c738
+      BXT_PORT_TX_DW14_LN3_B, --c7b8
+      PORT_PCS_DW1_LN0_B,     --c804
+      BXT_PORT_PCS_DW10_01_C, --c828
+      BXT_PORT_PCS_DW12_01_C, --c830
+      PORT_TX_DW2_LN0_B,      --c888
+      PORT_TX_DW4_LN0_B,--      c890
+      PORT_TX_DW5_LN0_B,      --c894
+      PORT_TX_DW7_LN0_B,      --c89c
+      PORT_TX_DW8_LN0_B,      --c8a0
+      BXT_PORT_TX_DW2_LN0_C,  --c908
       BXT_PORT_TX_DW3_LN0_C,
       BXT_PORT_TX_DW4_LN0_C,
       BXT_PORT_TX_DW14_LN0_C,
-      BXT_PORT_TX_DW14_LN1_C,
-      BXT_PORT_TX_DW14_LN2_C,
-      BXT_PORT_TX_DW14_LN3_C,
-      BXT_PORT_PCS_DW10_GRP_B,
+      PORT_TX_DW4_LN1_B,      --c990
+      BXT_PORT_TX_DW14_LN1_C, --c9b8
+      PORT_TX_DW4_LN2_B,      --ca90
+      BXT_PORT_TX_DW14_LN2_C, --cb38
+      PORT_TX_DW4_LN3_B,      --cb90
+      BXT_PORT_TX_DW14_LN3_C, --cbb8
+      BXT_PORT_PCS_DW10_GRP_B,--cc28
       BXT_PORT_PCS_DW12_GRP_B,
       BXT_PORT_TX_DW2_GRP_B,
       BXT_PORT_TX_DW3_GRP_B,
@@ -779,6 +799,7 @@ is
       GT_MAILBOX_DATA,
       GT_MAILBOX_DATA_1,
       PORT_CL_DW5_C,
+      PORT_CL_DW10_C,
       PORT_COMP_DW0_C,
       PORT_COMP_DW1_C,
       PORT_COMP_DW3_C,
@@ -786,9 +807,21 @@ is
       PORT_COMP_DW9_C,
       PORT_COMP_DW10_C,
       PORT_PCS_DW1_GRP_C,
+      PORT_TX_DW2_GRP_C,
+      PORT_TX_DW4_GRP_C,
+      PORT_TX_DW5_GRP_C,
+      PORT_TX_DW7_GRP_C,
       PORT_TX_DW8_GRP_C,
-      PORT_PCS_DW1_LN0_C,
-      PORT_TX_DW8_LN0_C,
+      PORT_PCS_DW1_LN0_C, -- 0804
+      PORT_TX_DW2_LN0_C, -- 0888
+      PORT_TX_DW4_LN0_C, -- 0890
+      PORT_TX_DW5_LN0_C, -- 0894
+      PORT_TX_DW7_LN0_C, -- 089c
+      PORT_TX_DW8_LN0_C, -- 08a0
+      PORT_TX_DW4_LN1_C,
+      PORT_TX_DW4_LN2_C,
+      PORT_TX_DW4_LN3_C,
+
       BXT_PORT_CL1CM_DW0_A,
       PORT_CL_DW5_A,
       BXT_PORT_CL1CM_DW9_A,
@@ -816,16 +849,28 @@ is
       BXT_PORT_TX_DW14_LN0_A,
       BXT_PORT_TX_DW14_LN1_A,
       PORT_PCS_DW1_GRP_A,
+      PORT_TX_DW2_GRP_A,
+      PORT_TX_DW4_GRP_A,
+      PORT_TX_DW5_GRP_A,
+      PORT_TX_DW7_GRP_A,
       PORT_TX_DW8_GRP_A,
       BXT_PORT_TX_DW14_LN2_A,
       BXT_PORT_TX_DW14_LN3_A,
       PORT_PCS_DW1_LN0_A,
+      PORT_TX_DW2_LN0_A,
+      PORT_TX_DW4_LN0_A,
+      PORT_TX_DW5_LN0_A,
+      PORT_TX_DW7_LN0_A,
       PORT_TX_DW8_LN0_A,
+      PORT_TX_DW4_LN1_A,
+      PORT_TX_DW4_LN2_A,
+      PORT_TX_DW4_LN3_A,
       BXT_PORT_PCS_DW10_GRP_A,
       BXT_PORT_PCS_DW12_GRP_A,
       BXT_PORT_TX_DW2_GRP_A,
       BXT_PORT_TX_DW3_GRP_A,
       BXT_PORT_TX_DW4_GRP_A,
+      DPCLKA_CFGCR0,
       DPLL_0_CFGCR0,
       DPLL_0_CFGCR1,
       DPLL_1_CFGCR0,
@@ -1609,9 +1654,12 @@ is
       IPS_CTL               => 16#04_3408# / Register_Width,
       ARB_CTL               => 16#04_5000# / Register_Width,
       DBUF_CTL              => 16#04_5008# / Register_Width,
+      DBUF_CTL_S2           => 16#04_4fe8# / Register_Width,
       NDE_RSTWRN_OPT        => 16#04_6408# / Register_Width,
       GEN8_CHICKEN_DCPR_1   => 16#04_6430# / Register_Width,
       GEN11_CHICKEN_DCPR_2  => 16#04_6434# / Register_Width,
+      GEN9_CLKGATE_DIS_0    => 16#04_6530# / Register_Width,
+      GEN9_CHICKEN_DPCR_3   => 16#04_6538# / Register_Width,
       PCH_DREF_CONTROL      => 16#0c_6200# / Register_Width,
       PCH_DPLL_SEL          => 16#0c_7000# / Register_Width,
       GT_MAILBOX            => 16#13_8124# / Register_Width,
@@ -1802,12 +1850,14 @@ is
       MBUS_ABOX2_CTL        => 16#04_504c# / Register_Width,
       BW_BUDDY1_PAGE_MASK   => 16#04_5144# / Register_Width,
       BW_BUDDY2_PAGE_MASK   => 16#04_5154# / Register_Width,
+      BW_BUDDY1_CTL         => 16#04_5140# / Register_Width,
+      BW_BUDDY2_CTL         => 16#04_5150# / Register_Width,
 
-      -- For accessing DKL PHY registers
+      -- For accessing TGL DKL PHY registers
       HIP_INDEX_REG0        => 16#10_10a0# / Register_Width,
       HIP_INDEX_REG1        => 16#10_10a4# / Register_Width,
 
-      -- DKL PHY registers
+      -- TGL DKL PHY registers
       DKL_CMN_UC_DW_27_1    => 16#16_836c# / Register_Width,
       DKL_CMN_UC_DW_27_2    => 16#16_936c# / Register_Width,
       DKL_CMN_UC_DW_27_3    => 16#16_a36c# / Register_Width,
@@ -1815,7 +1865,7 @@ is
       DKL_CMN_UC_DW_27_5    => 16#16_c36c# / Register_Width,
       DKL_CMN_UC_DW_27_6    => 16#16_d36c# / Register_Width,
 
-      -- DPLL registers
+      -- TGL DPLL registers
       DPLL_4_ENABLE         => 16#04_6018# / Register_Width,
       DPLL_0_CFGCR0         => 16#16_4284# / Register_Width,
       DPLL_0_CFGCR1         => 16#16_4288# / Register_Width,
@@ -1825,7 +1875,48 @@ is
       DPLL_4_CFGCR1         => 16#16_4298# / Register_Width,
       DPLL_0_SSC            => 16#16_4b10# / Register_Width,
       DPLL_1_SSC            => 16#16_4c10# / Register_Width,
-      DPLL_4_SSC            => 16#16_4e10# / Register_Width);
+      DPLL_4_SSC            => 16#16_4e10# / Register_Width,
+
+      -- TGL DDI registers
+      PORT_TX_DW2_LN0_A     => 16#16_2888# / Register_Width,
+      PORT_TX_DW2_LN0_B     => 16#06_c888# / Register_Width,
+      PORT_TX_DW2_LN0_C     => 16#16_0888# / Register_Width,
+      PORT_TX_DW2_GRP_A     => 16#16_2688# / Register_Width,
+      PORT_TX_DW2_GRP_B     => 16#06_c688# / Register_Width,
+      PORT_TX_DW2_GRP_C     => 16#16_0688# / Register_Width,
+      PORT_TX_DW4_LN0_A     => 16#16_2890# / Register_Width,
+      PORT_TX_DW4_LN1_A     => 16#16_2990# / Register_Width,
+      PORT_TX_DW4_LN2_A     => 16#16_2a90# / Register_Width,
+      PORT_TX_DW4_LN3_A     => 16#16_2b90# / Register_Width,
+      PORT_TX_DW4_LN0_B     => 16#06_c890# / Register_Width,
+      PORT_TX_DW4_LN1_B     => 16#06_c990# / Register_Width,
+      PORT_TX_DW4_LN2_B     => 16#06_ca90# / Register_Width,
+      PORT_TX_DW4_LN3_B     => 16#06_cb90# / Register_Width,
+      PORT_TX_DW4_LN0_C     => 16#16_0890# / Register_Width,
+      PORT_TX_DW4_LN1_C     => 16#16_0990# / Register_Width,
+      PORT_TX_DW4_LN2_C     => 16#16_0a90# / Register_Width,
+      PORT_TX_DW4_LN3_C     => 16#16_0b90# / Register_Width,
+      PORT_TX_DW4_GRP_A     => 16#16_2690# / Register_Width,
+      PORT_TX_DW4_GRP_B     => 16#06_c690# / Register_Width,
+      PORT_TX_DW4_GRP_C     => 16#16_0690# / Register_Width,
+      PORT_TX_DW5_LN0_A     => 16#16_2894# / Register_Width,
+      PORT_TX_DW5_LN0_B     => 16#06_c894# / Register_Width,
+      PORT_TX_DW5_LN0_C     => 16#16_0894# / Register_Width,
+      PORT_TX_DW5_GRP_A     => 16#16_2694# / Register_Width,
+      PORT_TX_DW5_GRP_B     => 16#06_c694# / Register_Width,
+      PORT_TX_DW5_GRP_C     => 16#16_0694# / Register_Width,
+      PORT_TX_DW7_LN0_A     => 16#16_289c# / Register_Width,
+      PORT_TX_DW7_LN0_B     => 16#06_c89c# / Register_Width,
+      PORT_TX_DW7_LN0_C     => 16#16_089c# / Register_Width,
+      PORT_TX_DW7_GRP_A     => 16#16_269c# / Register_Width,
+      PORT_TX_DW7_GRP_B     => 16#06_c69c# / Register_Width,
+      PORT_TX_DW7_GRP_C     => 16#16_069c# / Register_Width,
+      TGL_DP_TP_STATUS_A    => 16#06_0544# / Register_Width,
+      TGL_DP_TP_STATUS_B    => 16#06_1544# / Register_Width,
+      TGL_DP_TP_STATUS_C    => 16#06_2544# / Register_Width,
+      TGL_DP_TP_STATUS_D    => 16#06_3544# / Register_Width,
+      DPCLKA_CFGCR0         => 16#16_4280# / Register_Width,
+      PORT_CL_DW10_C        => 16#16_0028# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..
@@ -1873,7 +1964,9 @@ is
    DDI_AUX_DATA_USBC1_5 : constant Registers_Index := DDI_AUX_DATA_D_5;
    DPLL_0_ENABLE        : constant Registers_Index := LCPLL1_CTL;
    DPLL_1_ENABLE        : constant Registers_Index := LCPLL2_CTL;
-
+   PORT_CL_DW10_A       : constant Registers_Index := BXT_PORT_CL1CM_DW10_A;
+   PORT_CL_DW10_B       : constant Registers_Index := BXT_PORT_CL1CM_DW10_BC;
+   
    ---------------------------------------------------------------------------
 
    Default_Timeout_MS : constant := 10;

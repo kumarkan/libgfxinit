@@ -48,17 +48,17 @@ is
                      when Tertiary  => DIGI_D)),
             when Tigerlake =>
               (case Port is
-                  when eDP         => DIGI_A,
-                  when HDMI1 | DP1 => DIGI_B,
-                  when HDMI2 | DP2 => DIGI_C,
-                  when HDMI3 | DP3 => DIGI_D,
-                  when USBC1       => DDI_TC1,
-                  when USBC2       => DDI_TC2,
-                  when USBC3       => DDI_TC3,
-                  when USBC4       => DDI_TC4,
-                  when USBC5       => DDI_TC5,
-                  when USBC6       => DDI_TC6,
-                  when others      => LVDS),    -- n/a, actually
+                  when eDP                => DIGI_A,
+                  when HDMI1 | DP1        => DIGI_B,
+                  when HDMI2 | DP2        => DIGI_C,
+                  when HDMI3 | DP3        => DIGI_D,
+                  when USBC1_DP | USBC1_HDMI => DDI_TC1,
+                  when USBC2_DP | USBC2_HDMI => DDI_TC2,
+                  when USBC3_DP | USBC3_HDMI => DDI_TC3,
+                  when USBC4_DP | USBC4_HDMI => DDI_TC4,
+                  when USBC5_DP | USBC5_HDMI => DDI_TC5,
+                  when USBC6_DP | USBC6_HDMI => DDI_TC6,
+                  when others             => LVDS),    -- n/a, actually
             when others =>             -- everything but VGA directly on CPU
               (case Port is
                   when LVDS         => LVDS,    -- n/a, actually
@@ -84,12 +84,7 @@ is
             when DP1       => PCH_DP_B,
             when DP2       => PCH_DP_C,
             when DP3       => PCH_DP_D,
-            when USBC1     => PCH_LVDS,   -- n/a, actually
-            when USBC2     => PCH_LVDS,   -- n/a, actually
-            when USBC3     => PCH_LVDS,   -- n/a, actually
-            when USBC4     => PCH_LVDS,   -- n/a, actually
-            when USBC5     => PCH_LVDS,   -- n/a, actually
-            when USBC6     => PCH_LVDS);  -- n/a, actually
+	    when others    => PCH_LVDS);  -- n/a, actually
    end To_PCH_Port;
 
    function To_Display_Type (Port : Active_Port_Type) return Display_Type
@@ -102,7 +97,10 @@ is
             when Analog           => VGA,
             when HDMI1 .. HDMI3   => HDMI,
             when DP1 .. DP3       => DP,
-            when USBC1 .. USBC6   => DP);
+            when USBC1_DP | USBC2_DP | USBC3_DP |
+	         USBC4_DP | USBC5_DP | USBC6_DP => DP,
+	    when USBC1_HDMI | USBC2_HDMI | USBC3_HDMI |
+	         USBC4_HDMI | USBC5_HDMI | USBC6_HDMI => HDMI);
    end To_Display_Type;
 
    function To_Panel (Port : Active_Port_Type) return Panel_Control
@@ -204,8 +202,10 @@ is
             PCH_Port => To_PCH_Port (Port),
             Display  => To_Display_Type (Port),
             Panel    => To_Panel (Port),
+	    Pipe     => Pipe,
             Mode     => Mode,
             Is_FDI   => Config.Is_FDI_Port (Port),
+	    Is_eDP   => Port = eDP,
             FDI      => Default_DP,
             DP       => Default_DP);
 
@@ -240,8 +240,10 @@ is
             PCH_Port => PCH_Port'First,
             Display  => Display_Type'First,
             Panel    => No_Panel,
+	    Pipe     => Pipe_Index'First,
             Mode     => Invalid_Mode,
             Is_FDI   => False,
+	    Is_eDP   => False,
             FDI      => Default_DP,
             DP       => Default_DP);
       end if;

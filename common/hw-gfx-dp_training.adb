@@ -274,7 +274,8 @@ package body HW.GFX.DP_Training is
    ----------------------------------------------------------------------------
 
    procedure Train_DP
-     (Port     : in     T;
+     (Pipe     : in     GMA.Pipe_Index;
+      Port     : in     T;
       Link     : in     DP_Link;
       Success  :    out Boolean)
    is
@@ -323,8 +324,8 @@ package body HW.GFX.DP_Training is
       Train_Set.Voltage_Swing := DP_Info.DP_Voltage_Swing'First;
       Train_Set.Pre_Emph      := DP_Info.DP_Pre_Emph'First;
 
-      Set_Pattern (Port, Link, DP_Info.TP_1);
-      Set_Signal_Levels (Port, Link, Train_Set);
+      Set_Pattern (Pipe, Port, Link, DP_Info.TP_1);
+      Set_Signal_Levels (Pipe, Port, Link, Train_Set);
 
       pragma Warnings
         (GNATprove, Off, """Success"" modified by call, but value overwritten*",
@@ -357,7 +358,7 @@ package body HW.GFX.DP_Training is
                Retries := 0;
             end if;
 
-            Set_Signal_Levels (Port, Link, Train_Set);
+            Set_Signal_Levels (Pipe, Port, Link, Train_Set);
             Sink_Set_Signal_Levels (Port, DP, Link, Train_Set, Success);
             exit when not Success;
          end loop;
@@ -366,7 +367,7 @@ package body HW.GFX.DP_Training is
       Success := Success and CR_Done;
 
       if Success then
-         Set_Pattern (Port, Link, EQ_Pattern);
+         Set_Pattern (Pipe, Port, Link, EQ_Pattern);
          Sink_Set_Training_Pattern (Port, Link, EQ_Pattern, Train_Set, Success);
       end if;
 
@@ -378,7 +379,7 @@ package body HW.GFX.DP_Training is
               (Port, DP, Link, Train_Set, CR_Done, EQ_Done, Success);
             exit when EQ_Done or not Success;
 
-            Set_Signal_Levels (Port, Link, Train_Set);
+            Set_Signal_Levels (Pipe, Port, Link, Train_Set);
             Sink_Set_Signal_Levels (Port, DP, Link, Train_Set, Success);
             exit when not Success;
          end loop;
@@ -388,11 +389,11 @@ package body HW.GFX.DP_Training is
       -- so tell sink first.
       Sink_Set_Training_Pattern
         (Port, Link, DP_Info.TP_None, Train_Set, Success);
-      Set_Pattern (Port, Link, DP_Info.TP_None);
+      Set_Pattern (Pipe, Port, Link, DP_Info.TP_None);
 
       Success := Success and then EQ_Done;
       if not Success then
-         Off (Port);
+         Off (Pipe, Port);
       end if;
    end Train_DP;
 

@@ -224,7 +224,8 @@ package body HW.GFX.GMA.PCH.DP is
                      DP_CTL_LINK_TRAIN (DP_Info.TP_1));
 
       Training.Train_DP
-        (Port     => Port_Cfg.PCH_Port,
+        (Pipe     => Pipe_Index'First, -- unused
+	 Port     => Port_Cfg.PCH_Port,
          Link     => Port_Cfg.DP,
          Success  => Success);
    end On;

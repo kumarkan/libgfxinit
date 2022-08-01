@@ -45,6 +45,7 @@ package body HW.GFX.GMA.Pipe_Setup is
 
    PLANE_CTL_PLANE_ENABLE              : constant := 1 * 2 ** 31;
    PLANE_CTL_SRC_PIX_FMT_RGB_32B_8888  : constant := 4 * 2 ** 24;
+   PLANE_CTL_TGL_SRC_PIX_FMT_RGB_32B_8888 : constant := 8 * 2 ** 23;
    PLANE_CTL_PLANE_GAMMA_DISABLE       : constant := 1 * 2 ** 13;
    PLANE_CTL_TILED_SURFACE_MASK        : constant := 7 * 2 ** 10;
    PLANE_CTL_TILED_SURFACE_LINEAR      : constant := 0 * 2 ** 10;
@@ -67,7 +68,10 @@ package body HW.GFX.GMA.Pipe_Setup is
    PLANE_WM_ENABLE                     : constant :=        1 * 2 ** 31;
    PLANE_WM_LINES_SHIFT                : constant :=                 14;
    PLANE_WM_LINES_MASK                 : constant := 16#001f# * 2 ** 14;
-   PLANE_WM_BLOCKS_MASK                : constant := 16#03ff# * 2 **  0;
+   PLANE_WM_BLOCKS_MASK                : constant :=
+      (if Config.Has_Wide_Watermarks
+       then 16#07ff# * 2 **  0
+       else 16#03ff# * 2 **  0);
 
    VGA_SR_INDEX                        : constant :=   16#03c4#;
    VGA_SR_DATA                         : constant :=   16#03c5#;
@@ -129,6 +133,8 @@ package body HW.GFX.GMA.Pipe_Setup is
      (if Config.Has_GMCH_VGACNTRL then
          Registers.GMCH_VGACNTRL
       else Registers.CPU_VGACNTRL);
+
+   PLANE_COLOR_CTL_GAMMA_DISABLE : constant := 16#2000#;
 
    ---------------------------------------------------------------------------
 
@@ -213,6 +219,7 @@ package body HW.GFX.GMA.Pipe_Setup is
       -- FIXME: setup correct format, based on framebuffer RGB format
       Format : constant Word32 := 6 * 2 ** 26;
       PRI : Word32 := DSPCNTR_ENABLE or Format;
+      Plane_Ctl : Word32 := 0;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
@@ -231,13 +238,27 @@ package body HW.GFX.GMA.Pipe_Setup is
                Offset   := Shift_Left (Word32 (FB.Start_Y), 16) or
                            Word32 (FB.Start_X);
             end if;
-            Registers.Write
-              (Register    => Controller.PLANE_CTL,
-               Value       => PLANE_CTL_PLANE_ENABLE or
-                              PLANE_CTL_SRC_PIX_FMT_RGB_32B_8888 or
-                              PLANE_CTL_PLANE_GAMMA_DISABLE or
-                              PLANE_CTL_TILED_SURFACE (FB.Tiling) or
-                              PLANE_CTL_PLANE_ROTATION (FB.Rotation));
+
+            Plane_Ctl := PLANE_CTL_PLANE_ENABLE or
+                         PLANE_CTL_TILED_SURFACE (FB.Tiling) or
+                         PLANE_CTL_PLANE_ROTATION (FB.Rotation);
+
+	    if Config.Has_TGL_Plane_Control then
+               Registers.Write
+	         (Register => Controller.PLANE_COLOR_CTL,
+		  Value    => PLANE_COLOR_CTL_GAMMA_DISABLE);
+               Registers.Write
+	         (Register => Controller.PLANE_AUX_DIST,
+		  Value    => 0);
+
+               Plane_Ctl := Plane_Ctl or PLANE_CTL_TGL_SRC_PIX_FMT_RGB_32B_8888;
+            else
+               Plane_Ctl := Plane_Ctl or
+	                    PLANE_CTL_SRC_PIX_FMT_RGB_32B_8888 or
+                            PLANE_CTL_PLANE_GAMMA_DISABLE;
+	    end if;
+
+            Registers.Write (Controller.PLANE_CTL, Plane_Ctl);
             Registers.Write (Controller.PLANE_OFFSET, Offset);
             Registers.Write (Controller.PLANE_SIZE, Encode (Width, Height));
             Registers.Write (Controller.PLANE_STRIDE, Stride);
@@ -294,11 +315,41 @@ package body HW.GFX.GMA.Pipe_Setup is
       use type Word8;
 
       Reg8 : Word8;
+
+      type BW_CREDIT is new natural range 0 .. 3;
+      function MBUS_DBOX_BW_CREDIT (C : BW_CREDIT) return Word32
+      is (Shift_Left (Word32 (C), 14));
+
+      type B_CREDIT is new natural range 0 .. 31;
+      function MBUS_DBOX_B_CREDIT (C : B_CREDIT) return Word32
+      is (Shift_Left (Word32 (C), 8));
+
+      type A_CREDIT is new natural range 0 .. 15;
+      function MBUS_DBOX_A_CREDIT (C : A_CREDIT) return Word32
+      is (Word32 (C));
+      
+      PIXEL_ROUNDING_TRUNC_FB_PASSTHRU : constant := 1 * 2 ** 15;
+      PER_PIXEL_ALPHA_BYPASS_EN        : constant := 1 * 2 ** 7;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
+      if Config.Has_Mbus_Dbox_Credits then
+         Registers.Set_Mask
+	   (Register => Controller.PIPE_CHICKEN,
+	    Mask     => PER_PIXEL_ALPHA_BYPASS_EN or
+	                PIXEL_ROUNDING_TRUNC_FB_PASSTHRU);
+      end if;
+
       if Config.Has_Plane_Control then
          Setup_Watermarks (Controller);
+      end if;
+
+      if Config.Has_Mbus_Dbox_Credits then
+         Registers.Write
+	   (Register => Controller.MBUS_DBOX_CTL,
+	    Value    => MBUS_DBOX_BW_CREDIT (2) or
+	                MBUS_DBOX_B_CREDIT (12) or
+			MBUS_DBOX_A_CREDIT (2));
       end if;
 
       if Framebuffer.Offset = VGA_PLANE_FRAMEBUFFER_OFFSET then
@@ -431,6 +482,8 @@ package body HW.GFX.GMA.Pipe_Setup is
    is
       use type Registers.Registers_Invalid_Index;
 
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+
       -- Enable 7x5 extended mode where possible:
       Scaler_Mode : constant Word32 :=
         (if Controller.PS_CTRL_2 /= Registers.Invalid_Register then
@@ -457,6 +510,12 @@ package body HW.GFX.GMA.Pipe_Setup is
    begin
       -- Writes to WIN_SZ arm the PS registers.
 
+      Debug.Put ("Max_Width: ");
+      Debug.Put_Int32 (Pos32'Min (Horizontal_Limit, Mode.H_Visible));
+      Debug.New_Line;
+      Debug.Put ("Max_Height: ");
+      Debug.Put_Int32 (Pos32'Min (Horizontal_Limit, Mode.V_Visible));
+      Debug.New_Line;
       Scale_Keep_Aspect
         (Width       => Width,
          Height      => Height,
@@ -697,7 +756,6 @@ package body HW.GFX.GMA.Pipe_Setup is
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
       Transcoder.Setup (Pipe, Port_Cfg);
-
       Setup_FB (Pipe, Port_Cfg.Mode, Framebuffer);
       Update_Cursor (Pipe, Framebuffer, Cursor);
 

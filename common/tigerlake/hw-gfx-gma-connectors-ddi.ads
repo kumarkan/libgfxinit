@@ -12,14 +12,15 @@
 -- GNU General Public License for more details.
 --
 
-with HW.Debug;
-with GNAT.Source_Info;
+package HW.GFX.GMA.Connectors.DDI is
 
-use type HW.Word64;
+   procedure Pre_On
+     (Pipe     : in     Pipe_Index;
+      Port_Cfg : in     Port_Config;
+      PLL_Hint : in     Word32;
+      Success  :    out Boolean);
 
-private package HW.GFX.GMA.Combo_Phy is
+   procedure Post_On (Pipe : Pipe_Index; Port_Cfg : Port_Config);
+   procedure Off (Pipe : Pipe_Index; Port : TGL_Digital_Port);
+end HW.GFX.GMA.Connectors.DDI;
 
-   procedure Initialize;
-   procedure All_Off;
-
-end HW.GFX.GMA.Combo_Phy;

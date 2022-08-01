@@ -25,7 +25,7 @@ package body HW.GFX.GMA.Combo_Phy is
    PORT_TX_DW8_ODCC_DIV_SEL_MASK                 : constant := 3 * 2 ** 29;
    PORT_TX_DW8_ODCC_CLKSEL                       : constant := 1 * 2 ** 31;
    PORT_COMP_DW8_IREFGEN                         : constant := 1 * 2 ** 24;
-   PORT_COMP_DW1_REF_MASK                        : constant := 16#00ff_0000#;
+   PORT_COMP_DW1_REF_MASK                        : constant := 16#ff_00ff#;
 
    type Combo_Phy is (DDI_A, DDI_B, DDI_C);
 
@@ -95,6 +95,7 @@ package body HW.GFX.GMA.Combo_Phy is
       Registers.Read (Phy_Regs (Phy).PORT_TX_DW8_LN0, DW8);
       DW8 := DW8 and not PORT_TX_DW8_ODCC_DIV_SEL_MASK;
       DW8 := DW8 or PORT_TX_DW8_ODCC_CLKSEL;
+      DW8 := DW8 or 1 * 2 ** 29; -- ICL_PORT_TX_DW8_ODCC_CLK_DIV_SEL_DIV2
       Registers.Write (Phy_Regs (Phy).PORT_TX_DW8_GRP, DW8);
 
       -- Set DCC discontinuous mode
@@ -154,8 +155,8 @@ package body HW.GFX.GMA.Combo_Phy is
 
          Tmp := Shift_Right (DW3 and PROCESS_MASK, 26);
          case (Tmp) is
-            when 4 => Process := DOT0;
-            when 8 => Process := DOT1;
+            when 0 => Process := DOT0;
+            when 1 => Process := DOT1;
             when others => Process := DOT0;
          end case;
 
@@ -191,33 +192,51 @@ package body HW.GFX.GMA.Combo_Phy is
       end case;
    end Phy_Is_Master;
 
-   procedure Initialize is
+   procedure Initialize
+   is
+      Was_Enabled : Boolean;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
        -- Initialize all combo PHYs with Combo PHY DDI Buffer Combo PHY Init Sequence
       for Phy in Combo_Phy'range loop
-         Config_DCC_SusClk (Phy);
+         Registers.Is_Set_Mask (
+            Phy_Regs (Phy).PORT_COMP_DW0,
+            PORT_COMP_DW0_COMP_INIT,
+            Was_Enabled);
 
-         --   Clear PHY_MISC_<DDI that maps to this PHY> DE to IO Comp Pwr Down to 0b.
-         Registers.Unset_Mask (Phy_Regs (Phy).PHY_MISC, PHY_MISC_DE_TO_IO_COMP_PWR_DOWN);
+         if not Was_Enabled then
+            Config_DCC_SusClk (Phy);
 
-         --   Program procmon reference values in PORT_COMP_DW{1,9,10}
-         Config_Procmon_Reference (Phy);
+            -- Clear PHY_MISC DE to IO Comp Pwr Down
+            Registers.Unset_Mask
+              (Phy_Regs (Phy).PHY_MISC,
+               PHY_MISC_DE_TO_IO_COMP_PWR_DOWN);
 
-         --   If this PHY is a compensation source, set DW8 irefgen to 1
-         if Phy_Is_Master (Phy) then
-            Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_COMP_DW8,
-                                Mask => PORT_COMP_DW8_IREFGEN);
+            Config_Procmon_Reference (Phy);
+ 
+            if Phy_Is_Master (Phy) then
+               Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_COMP_DW8,
+                                   Mask => PORT_COMP_DW8_IREFGEN);
+            end if;
+
+            Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_COMP_DW0,
+                                Mask => PORT_COMP_DW0_COMP_INIT);
+
+            Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_CL_DW5,
+                                Mask => PORT_CL_DW5_POWER_DOWN_ENABLE);
          end if;
-
-         --   Set PORT_COMP_DW0 Comp Init to 1
-         Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_COMP_DW0,
-                             Mask => PORT_COMP_DW0_COMP_INIT);
-
-         --   PORT_CL_DW5 CL Power Down Enable to 1
-         Registers.Set_Mask (Register => Phy_Regs (Phy).PORT_CL_DW5,
-                             Mask => PORT_CL_DW5_POWER_DOWN_ENABLE);
       end loop;
    end Initialize;
+
+   procedure All_Off is
+   begin
+      for Phy in Combo_Phy'range loop
+         Registers.Set_Mask (Phy_Regs (Phy).PHY_MISC,
+                             PHY_MISC_DE_TO_IO_COMP_PWR_DOWN);
+
+         Registers.Unset_Mask (Phy_Regs (Phy).PORT_COMP_DW0,
+                               PORT_COMP_DW0_COMP_INIT);
+      end loop;
+   end All_Off;
 
 end HW.GFX.GMA.Combo_Phy;

@@ -14,6 +14,7 @@
 
 with HW.GFX.GMA.Config;
 with HW.GFX.GMA.Panel;
+with HW.GFX.GMA.Connectors.DDI;
 
 with HW.Debug;
 with GNAT.Source_Info;
@@ -23,6 +24,9 @@ package body HW.GFX.GMA.Connectors is
    procedure Post_Reset_Off is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      for Port in Combo_Port loop
+         DDI.Off (Pipe_Index'First, Port);
+      end loop;
    end Post_Reset_Off;
 
    procedure Initialize is
@@ -37,7 +41,7 @@ package body HW.GFX.GMA.Connectors is
       Success     :    out Boolean) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-      Success := True;
+      DDI.Pre_On (Pipe, Port_Cfg, PLL_Hint, Success);
    end Pre_On;
 
    procedure Post_On
@@ -48,6 +52,7 @@ package body HW.GFX.GMA.Connectors is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
       Panel.Backlight_On (Port_Cfg.Panel);
+      DDI.Post_On (Pipe, Port_Cfg);
       Success := True;
    end Post_On;
 
@@ -61,6 +66,9 @@ package body HW.GFX.GMA.Connectors is
    procedure Post_Off (Port_Cfg : Port_Config) is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      if Port_Cfg.Port in Combo_Port then
+         DDI.Off (Port_Cfg.Pipe, Port_Cfg.Port);
+      end if;
    end Post_Off;
 
    procedure Pre_All_Off  is
@@ -75,6 +83,9 @@ package body HW.GFX.GMA.Connectors is
    procedure Post_All_Off is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
+      for Port in Combo_Port loop
+         DDI.Off (Pipe_Index'First, Port);
+      end loop;
    end Post_All_Off;
 
 end HW.GFX.GMA.Connectors;

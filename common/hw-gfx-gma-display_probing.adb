@@ -116,6 +116,7 @@ is
       Raw_EDID : EDID.Raw_EDID_Data := (others => 16#00#);
    begin
       Success := Config.Valid_Port (Port);
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
       if Success then
          Panel.Wait_On (Config_Helpers.To_Panel (Port));

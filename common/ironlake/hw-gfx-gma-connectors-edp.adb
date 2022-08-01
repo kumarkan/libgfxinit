@@ -120,8 +120,11 @@ is
 
    pragma Warnings (GNATprove, Off, "unused variable ""Link""",
                     Reason => "Needed for a common interface");
+   pragma Warnings (GNATprove, Off, "unused variable ""Pipe""",
+                    Reason => "Needed for a common interface");
    procedure Set_Training_Pattern
-     (Port     : Digital_Port;
+     (Pipe     : Pipe_Index;
+      Port     : Digital_Port;
       Link     : DP_Link;
       Pattern  : DP_Info.Training_Pattern)
    is
@@ -144,7 +147,8 @@ is
    end Set_Training_Pattern;
 
    procedure Set_Signal_Levels
-     (Port        : Digital_Port;
+     (Pipe        : Pipe_Index;
+      Port        : Digital_Port;
       Link        : DP_Link;
       Train_Set   : DP_Info.Train_Set)
    is
@@ -177,6 +181,7 @@ is
    end Set_Signal_Levels;
    pragma Warnings (GNATprove, On, "unused variable ""Port""");
    pragma Warnings (GNATprove, On, "unused variable ""Link""");
+   pragma Warnings (GNATprove, On, "unused variable ""Pipe""");
 
    ----------------------------------------------------------------------------
 

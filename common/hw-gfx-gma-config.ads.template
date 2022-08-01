@@ -34,7 +34,7 @@ private package HW.GFX.GMA.Config is
          when Tigerlake => Tigerlake);
    CPU_Var_Last : constant CPU_Variant :=
      (case Gen is
-         when Haswell | Skylake  => ULX,
+         when Haswell | Skylake | Tigerlake  => ULX,
          when others             => Normal);
    subtype Gen_CPU_Type is CPU_Type range CPU_First .. CPU_Last;
    subtype Gen_CPU_Variant is CPU_Variant range Normal .. CPU_Var_Last;
@@ -184,16 +184,16 @@ private package HW.GFX.GMA.Config is
 
    Has_Presence_Straps           : <genbool> := not Gen_Broxton;
    Is_ULT                        : <hswsklbool> :=
-     ((Gen_Haswell or Gen_Skylake) and then CPU_Var = ULT);
+     ((Gen_Haswell or Gen_Skylake or Gen_Tigerlake) and then CPU_Var = ULT);
    Is_ULX                        : <hswsklbool> :=
-     ((Gen_Haswell or Gen_Skylake) and then CPU_Var = ULX);
-   Is_LP                         : <hswsklbool> := Is_ULT or Is_ULX;
+     ((Gen_Haswell or Gen_Skylake or Gen_Tigerlake) and then CPU_Var = ULX);
+   Is_LP                         : <hswskltglbool> := Is_ULT or Is_ULX;
 
    ---------- CPU pipe: ---------
    Has_Tertiary_Pipe             : <ilkbool> := Ivybridge_On;
    Disable_Trickle_Feed          : <genbool> := not Gen_Haswell;
    Pipe_Enabled_Workaround       : <hswbool> := CPU_Broadwell;
-   Has_EDP_Transcoder            : <genbool> := Haswell_On;
+   Has_EDP_Transcoder            : <genbool> := Haswell_On and not Tigerlake_On;
    Use_PDW_For_EDP_Scaling       : <hswbool> := CPU_Haswell;
    Has_Pipe_DDI_Func             : <genbool> := Haswell_On;
    Has_Trans_Clk_Sel             : <genbool> := Haswell_On;
@@ -272,7 +272,7 @@ private package HW.GFX.GMA.Config is
      (not Haswell_On or else (CPU_Haswell and Is_ULX));
 
    ----------- GMBUS: -----------
-   Ungate_GMBUS_Unit_Level       : <genbool> := Skylake_On;
+   Ungate_GMBUS_Unit_Level       : <genbool> := Skylake_On and not Tigerlake_On;
    GMBUS_Alternative_Pins        : <genbool> := Gen_Broxton or Cannon_Point_On;
    Has_PCH_GMBUS                 : <genbool> := Ironlake_On;
 
@@ -289,6 +289,19 @@ private package HW.GFX.GMA.Config is
 
    ----------- Type-C: ----------
    Has_Type_C_Ports              : <genbool> := Tigerlake_On;
+
+   ----------- Transcoder -------
+   Need_Early_Transcoder_Setup   : <genbool> := Tigerlake_On;
+
+   ----------- MBUS DBOX --------
+   Has_Mbus_Dbox_Credits         : <genbool> := Tigerlake_On;
+
+   ----------- Planes -----------
+   Has_Wide_Watermarks           : <genbool> := Tigerlake_On;
+   Has_TGL_Plane_Control         : <genbool> := Tigerlake_On;
+
+   ----------- Rawclk -----------
+   Need_Rawclk_Numerator         : <genbool> := Tigerlake_On;
 
    ----------------------------------------------------------------------------
 
@@ -324,10 +337,11 @@ private package HW.GFX.GMA.Config is
    DDI_Buffer_Iboost : <hswsklvar> Natural :=
      (if Is_ULX or (CPU_Kabylake and Is_ULT) then 3 else 1);
 
-   Default_DDI_HDMI_Buffer_Translation : <hswvar> DDI_HDMI_Buf_Trans_Range :=
+   Default_DDI_HDMI_Buffer_Translation : <tglhswvar> DDI_HDMI_Buf_Trans_Range :=
      (if    CPU_Haswell    then 6
       elsif CPU_Broadwell  then 7
       elsif Broxton_On     then 8
+      elsif Tigerlake_On   then 6
                            else 0);
 
    ----------------------------------------------------------------------------
@@ -537,7 +551,11 @@ private package HW.GFX.GMA.Config is
                                     Is_Kaby_Lake_Y (Device_Id) or
                                     Is_Kaby_Lake_Y_AML (Device_Id) or
                                     Is_Coffee_Lake_Y_AML (Device_Id)),
-         when Tigerlake    => Is_Tiger_Lake (Device_Id));
+         when Tigerlake    => (case CPU_Var is
+	                        when Normal =>
+				   Is_Tiger_Lake_H (Device_Id),
+				when ULT | ULX =>
+				   Is_Tiger_Lake_U (Device_Id)));
 
    function Compatible_GPU (Device_Id : Word16) return Boolean is
      (Is_GPU (Device_Id, CPU, CPU_Var));

@@ -31,6 +31,6 @@ private package HW.GFX.GMA.PLLs.Combo_Phy is
 
    type Value_Array is array (Configurable_DPLLs) of Word32;
    Register_Value : constant Value_Array := Value_Array'
-     (DPLL0 => 1, DPLL1 => 2, DPLL4 => 3);
+     (DPLL0 => 0, DPLL1 => 1, DPLL4 => 2);
 
 end HW.GFX.GMA.PLLs.Combo_Phy;

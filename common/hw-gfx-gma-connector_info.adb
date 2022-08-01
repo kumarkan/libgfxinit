@@ -95,7 +95,7 @@ package body HW.GFX.GMA.Connector_Info is
            (Port_Cfg.Is_FDI and Port_Cfg.PCH_Port = PCH_LVDS) or
            Port_Cfg.Port = LVDS
          then 6
-         else 8);
+         else 12);
    end Default_BPC;
 
 end HW.GFX.GMA.Connector_Info;

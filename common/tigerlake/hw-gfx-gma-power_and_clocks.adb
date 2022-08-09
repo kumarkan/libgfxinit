@@ -123,51 +123,52 @@ package body HW.GFX.GMA.Power_And_Clocks is
       Power_DDI  => Registers.PWR_DDI_CTL_DRIVER,
       Power_AUX  => Registers.PWR_AUX_CTL_DRIVER);
 
-   function PW_Index (PW : PW_Domain) return Natural is
-     (case PW is
-      when PW1 => 0,
-      when PW2 => 1,
-      when PW3 => 2,
-      when PW4 => 3,
-      when PW5 => 5);
+   package Rep is
+      function PW_Index (PW : PW_Domain) return natural;
+      function DDI_Index (DDI : DDI_Domain) return natural;
+      function AUX_Index (AUX : AUX_Domain) return natural;
+   end Rep;
+
+   package body Rep is
+      function PW_Index (PW : PW_Domain) return natural
+      with
+         SPARK_Mode => Off
+      is
+      begin
+         return PW'Enum_Rep - PW1'Enum_Rep;
+      end PW_Index;
+
+      function DDI_Index (DDI : DDI_Domain) return natural
+      with
+         SPARK_Mode => Off
+      is
+      begin
+         return DDI'Enum_Rep - DDI_A'Enum_Rep;
+      end DDI_Index;
+
+      function AUX_Index (AUX : AUX_Domain) return natural is
+      with
+         SPARK_Mode => Off
+      is
+      begin
+         return AUX'Enum_Rep - AUX_A'Enum_Rep;
+      end AUX_Index;
+   end Rep;
+
    function PW_Request_Mask (PW : PW_Domain) return Word32 is
-      (1 * 2 ** (2 * PW_Index (PW) + 1));
+      (2 ** (2 * Rep.PW_Index (PW) + 1));
    function PW_State_Mask (PW : PW_Domain) return Word32 is
-      (1 * 2 ** (2 * PW_Index (PW)));
+      (2 ** (2 * Rep.PW_Index (PW)));
 
-   ----------------------------------------------------------------------------
-
-   function DDI_Index (DDI : DDI_Domain) return Natural is
-     (case DDI is
-      when DDI_A   => 0,
-      when DDI_B   => 1,
-      when DDI_C   => 2,
-      when DDI_USBC1 => 3,
-      when DDI_USBC2 => 4,
-      when DDI_USBC3 => 5,
-      when DDI_USBC4 => 6,
-      when DDI_USBC5 => 7,
-      when DDI_USBC6 => 8);
    function DDI_Request_Mask (DDI : DDI_Domain) return Word32 is
-      (1 * 2 ** (2 * DDI_Index (DDI) + 1));
+      (2 ** (2 * Rep.DDI_Index (DDI) + 1));
    function DDI_State_Mask (DDI : DDI_Domain) return Word32 is
-      (1 * 2 ** (2 * DDI_Index (DDI)));
+      (2 ** (2 * Rep.DDI_Index (DDI)));
 
-   function AUX_Index (AUX : AUX_Domain) return Natural is
-     (case AUX is
-      when AUX_A   => 0,
-      when AUX_B   => 1,
-      when AUX_C   => 2,
-      when AUX_USBC1 => 3,
-      when AUX_USBC2 => 4,
-      when AUX_USBC3 => 5,
-      when AUX_USBC4 => 6,
-      when AUX_USBC5 => 7,
-      when AUX_USBC6 => 8);
    function AUX_Request_Mask (AUX : AUX_Domain) return Word32 is
-      (1 * 2 ** (2 * AUX_Index (AUX) + 1));
+      (2 ** (2 * Rep.AUX_Index (AUX) + 1));
    function AUX_State_Mask (AUX : AUX_Domain) return Word32 is
-      (1 * 2 ** (2 * AUX_Index (AUX)));
+      (2 ** (2 * Rep.AUX_Index (AUX)));
 
    ----------------------------------------------------------------------------
 
@@ -303,6 +304,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
          when AUX_A     => Any_Port_Is (eDP),
 	 when DDI_B     => Any_Port_Is (eDP) or Any_Port_Is (HDMI2),
          when AUX_B     => Any_Port_Is (eDP) or Any_Port_Is (HDMI2),
+	 when DDI_TC1   => Any_Port_Is (USBC1_DP) or Any_Port_Is (USBC1_HDMI),
+	 when AUX_TC1   => Any_Port_Is (USBC1_DP) or Any_Port_Is (USBC1_HDMI),
          when others    => False);
    end Need_PD;
 

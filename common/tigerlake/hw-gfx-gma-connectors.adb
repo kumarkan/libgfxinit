@@ -15,6 +15,7 @@
 with HW.GFX.GMA.Config;
 with HW.GFX.GMA.Panel;
 with HW.GFX.GMA.Connectors.DDI;
+with HW.GFX.GMA.Connectors.TC;
 
 with HW.Debug;
 with GNAT.Source_Info;
@@ -87,5 +88,10 @@ package body HW.GFX.GMA.Connectors is
          DDI.Off (Pipe_Index'First, Port);
       end loop;
    end Post_All_Off;
+
+   procedure Pre_PLL (Port_Cfg : Port_Config) is
+   begin
+      TC.Pre_PLL;
+   end Pre_PLL;
 
 end HW.GFX.GMA.Connectors;

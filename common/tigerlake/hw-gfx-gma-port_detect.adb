@@ -15,6 +15,7 @@
 with HW.GFX.GMA.Config;
 with HW.GFX.GMA.Registers;
 with HW.GFX.GMA.Config_Helpers;
+with HW.GFX.GMA.Connectors.TC;
 
 with HW.Debug;
 with GNAT.Source_Info;
@@ -108,6 +109,8 @@ is
       Debug.Put_Word32 (Ctl);
       Debug.New_Line;
 
+      -- TC COLD must be blocked before Type-C registers
+      -- can be accessed.
       if (Port = eDP) then
          Detected := Config.Valid_Port (eDP);
       elsif Port = HDMI2 then

@@ -161,6 +161,8 @@ is
            (Pipe_Cfg.Port in Active_Port_Type and
             Port_Cfg.Mode = Port_Cfg.Mode'Loop_Entry);
 
+         Connectors.Pre_PLL (Port_Cfg);
+
          PLLs.Alloc
            (Port_Cfg => Port_Cfg,
             PLL      => Allocated_PLLs (Pipe),

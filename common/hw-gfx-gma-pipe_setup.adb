@@ -333,7 +333,7 @@ package body HW.GFX.GMA.Pipe_Setup is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
-      if Config.Has_Mbus_Dbox_Credits then
+      if Config.Has_Type_C_Ports then
          Registers.Set_Mask
 	   (Register => Controller.PIPE_CHICKEN,
 	    Mask     => PER_PIXEL_ALPHA_BYPASS_EN or

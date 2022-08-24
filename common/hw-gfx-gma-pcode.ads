@@ -60,6 +60,7 @@ private package HW.GFX.GMA.PCode is
    -- For reading data from PCode
    procedure Mailbox_Read
      (MBox        : in     Word32;
+      Command     : in     Word64 := 0;
       Wait_Ready  : in     Boolean := False;
       Wait_Ack    : in     Boolean := True;
       Reply       :    out Word64;

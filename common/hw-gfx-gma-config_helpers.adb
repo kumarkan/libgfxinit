@@ -49,9 +49,9 @@ is
             when Tigerlake =>
               (case Port is
                   when eDP                => DIGI_A,
-                  when HDMI1 | DP1        => DIGI_B,
+                  when HDMI1 | DP1        => DIGI_A,
                   when HDMI2 | DP2        => DIGI_B, -- ????
-                  when HDMI3 | DP3        => DIGI_D,
+                  when HDMI3 | DP3        => DIGI_C,
                   when USBC1_DP | USBC1_HDMI => DDI_TC1,
                   when USBC2_DP | USBC2_HDMI => DDI_TC2,
                   when USBC3_DP | USBC3_HDMI => DDI_TC3,
@@ -81,7 +81,7 @@ is
 	       when HDMI2      => PCH_HDMI_B,
 	       when HDMI3      => PCH_HDMI_C,
 	       when USBC1_HDMI => PCH_TC1,
-	       when USBC2_HDMI => PCH_TC2,
+	       when USBC2_HDMI | USBC2_DP => PCH_TC2,
 	       when USBC3_HDMI => PCH_TC3,
 	       when USBC4_HDMI => PCH_TC4,
 	       when USBC5_HDMI => PCH_TC5,

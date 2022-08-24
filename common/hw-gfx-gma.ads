@@ -85,6 +85,8 @@ is
    subtype Active_Port_Type is Port_Type
       range Port_Type'Succ (Disabled) .. Port_Type'Last;
    subtype Internal_Port_Type is Port_Type range LVDS .. eDP;
+   subtype Combo_Port_Type is Port_Type range DP1 .. HDMI3;
+   subtype USBC_Port_Type is Port_Type range USBC1_DP .. USBC6_HDMI;
 
    type Cursor_Mode is (No_Cursor, ARGB_Cursor);
    type Cursor_Size is (Cursor_64x64, Cursor_128x128, Cursor_256x256);

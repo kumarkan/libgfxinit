@@ -12,25 +12,16 @@
 -- GNU General Public License for more details.
 --
 
-with HW.Debug;
-with GNAT.Source_Info;
-with HW.GFX.GMA.PLLs;
+with HW.GFX.GMA.DP_Info;
 
-private package HW.GFX.GMA.PLLs.Combo_Phy is
+private package HW.GFX.GMA.Connectors.Combo_Phy is
 
-   procedure On
-     (PLL      : in     T;
-      Port_Cfg : in     Port_Config;
-      Success  :    out Boolean);
+   procedure Set_Signal_Levels
+     (Port        : Combo_Port;
+      eDP         : Boolean;
+      Link        : DP_Link;
+      Train_Set   : DP_Info.Train_Set);
 
-   procedure Free (PLL : T);
+   procedure Enable_HDMI (Port : Combo_Port; Dotclock : Frequency_Type);
 
-   procedure Initialize;
-
-   procedure All_Off;
-
-   type Value_Array is array (Combo_DPLLs) of Word32;
-   Register_Value : constant Value_Array := Value_Array'
-     (DPLL0 => 0, DPLL1 => 1);
-
-end HW.GFX.GMA.PLLs.Combo_Phy;
+end HW.GFX.GMA.Connectors.Combo_Phy;

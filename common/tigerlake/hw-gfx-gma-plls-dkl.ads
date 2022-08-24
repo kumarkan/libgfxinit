@@ -16,7 +16,7 @@ with HW.Debug;
 with GNAT.Source_Info;
 with HW.GFX.GMA.PLLs;
 
-private package HW.GFX.GMA.PLLs.Combo_Phy is
+private package HW.GFX.GMA.PLLs.DKL is
 
    procedure On
      (PLL      : in     T;
@@ -25,12 +25,6 @@ private package HW.GFX.GMA.PLLs.Combo_Phy is
 
    procedure Free (PLL : T);
 
-   procedure Initialize;
-
    procedure All_Off;
 
-   type Value_Array is array (Combo_DPLLs) of Word32;
-   Register_Value : constant Value_Array := Value_Array'
-     (DPLL0 => 0, DPLL1 => 1);
-
-end HW.GFX.GMA.PLLs.Combo_Phy;
+end HW.GFX.GMA.PLLs.DKL;

@@ -18,23 +18,25 @@ with HW.GFX.GMA.Power_And_Clocks;
 
 package body HW.GFX.GMA.PLLs.Combo_Phy is
 
-   type PLL_Regs is array (Configurable_DPLLs) of Registers.Registers_Index;
-   DPLL_ENABLE : constant PLL_Regs := PLL_Regs'
-     (DPLL0 => Registers.DPLL_0_ENABLE,
-      DPLL1 => Registers.DPLL_1_ENABLE,
-      DPLL4 => Registers.DPLL_4_ENABLE);
-   DPLL_CFGCR0 : constant PLL_Regs := PLL_Regs'
-     (DPLL0 => Registers.DPLL_0_CFGCR0,
-      DPLL1 => Registers.DPLL_1_CFGCR0,
-      DPLL4 => Registers.DPLL_4_CFGCR0);
-   DPLL_CFGCR1 : constant PLL_Regs := PLL_Regs'
-     (DPLL0 => Registers.DPLL_0_CFGCR1,
-      DPLL1 => Registers.DPLL_1_CFGCR1,
-      DPLL4 => Registers.DPLL_4_CFGCR1);
-   DPLL_SSC : constant PLL_Regs := PLL_Regs'
-     (DPLL0 => Registers.DPLL_0_SSC,
-      DPLL1 => Registers.DPLL_1_SSC,
-      DPLL4 => Registers.DPLL_4_SSC);
+   type PLL_Regs_Record is record
+      DPLL_ENABLE : Registers.Registers_Index;
+      DPLL_CFGCR0 : Registers.Registers_Index;
+      DPLL_CFGCR1 : Registers.Registers_Index;
+      DPLL_SSC    : Registers.Registers_Index;
+   end record;
+   type PLL_Regs_Array is array (Combo_DPLLs) of PLL_Regs_Record;
+   PLL_Regs : constant PLL_Regs_Array :=
+      PLL_Regs_Array'(
+     DPLL0 =>
+        (Registers.DPLL_0_ENABLE,
+	 Registers.DPLL_0_CFGCR0,
+	 Registers.DPLL_0_CFGCR1,
+	 Registers.DPLL_0_SSC),
+     DPLL1 =>
+        (Registers.DPLL_1_ENABLE,
+	 Registers.DPLL_1_CFGCR0,
+	 Registers.DPLL_1_CFGCR1,
+	 Registers.DPLL_1_SSC));
 
    DPLL_ENABLE_PLL_ENABLE   : constant := 1 * 2 ** 31;
    DPLL_ENABLE_PLL_LOCK     : constant := 1 * 2 ** 30;
@@ -349,8 +351,8 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          Debug.Put ("HDMI DCO freq is ");
          Debug.Put_Int64 (DCO);
 	 Debug.New_Line;
-         Params.DCO_Integer :=  Shift_Right (Word32 (DCO), 15);     --Word32 (Best_DCO);
-         Params.DCO_Fraction := Word32 (DCO) and 16#7fff#;   --Fraction_Part (Best_DCO);
+         Params.DCO_Integer :=  Shift_Right (Word32 (DCO), 15);
+         Params.DCO_Fraction := Word32 (DCO) and 16#7fff#;
       end;
 
       Success := True;
@@ -371,7 +373,7 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          Calc_DP_PLL_Dividers (PLL, Port_Cfg.DP.Bandwidth, Params, Success);
       else
          declare
-            Color_Depth : constant Int64 := 36; -- Port_Cfg.Mode.BPC * 5; -- 36; makes it "work"
+            Color_Depth : constant Int64 := 24; -- Port_Cfg.Mode.BPC * 5; -- 36; makes it "work"
             Pll_Freq : constant Int64 := Color_Depth * Port_Cfg.Mode.Dotclock / 24;
          begin
             Debug.Put ("Mode.BPC is ");
@@ -401,11 +403,11 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
 
       -- Enable DPLL power in DPLL_ENABLE
       Registers.Set_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_POWER_ENABLE);
       -- Wait for DPLL power state enabled
       Registers.Wait_Set_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_POWER_STATE,
          Success  => Success);
 
@@ -415,32 +417,32 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
 
       -- Configure DPLL_SSC
       Registers.Write
-        (Register => DPLL_SSC (PLL),
+        (Register => PLL_Regs (PLL).DPLL_SSC,
          Value    => (if Port_Cfg.Display = DP then DPLL_SSC_DP else 0));
 
       -- Configure DPLL_CFGCR0 to set DCO frequency
       Registers.Write
-        (Register => DPLL_CFGCR0 (PLL),
+        (Register => PLL_Regs (PLL).DPLL_CFGCR0,
          Value => Params.DCO_Fraction * 2 ** 10 or
                   Params.DCO_Integer);
 
       -- Configure DPLL_CFGCR1 to set the dividers
       Registers.Write
-        (Register => DPLL_CFGCR1 (PLL),
+        (Register => PLL_Regs (PLL).DPLL_CFGCR1,
          Value => Word32(Params.QDiv_Ratio) * 2 ** 10 or
                   Word32(Params.QDiv_Mode) * 2 ** 9 or
                   Word32(Params.KDiv) * 2 ** 6 or
                   Word32(Params.PDiv) * 2 ** 2);
       -- Posting read on either CFGCR{0,1}
-      Registers.Posting_Read(DPLL_CFGCR1 (PLL));
+      Registers.Posting_Read(PLL_Regs (PLL).DPLL_CFGCR1);
 
       -- Enable DPLL
       Registers.Set_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_PLL_ENABLE);
       -- Wait for PLL Lock status
       Registers.Wait_Set_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_PLL_LOCK,
          Success  => Success);
    end On;
@@ -449,23 +451,23 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
    is
    begin
       Registers.Unset_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_PLL_ENABLE);
       Registers.Wait_Unset_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_PLL_LOCK);
 
       Registers.Unset_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_POWER_ENABLE);
       Registers.Wait_Unset_Mask
-        (Register => DPLL_ENABLE (PLL),
+        (Register => PLL_Regs (PLL).DPLL_ENABLE,
          Mask     => DPLL_ENABLE_POWER_STATE);
    end Free;
 
    procedure All_Off is
    begin
-      for PLL in Configurable_DPLLs loop
+      for PLL in Combo_DPLLs loop
          Free (PLL);
       end loop;
       null;

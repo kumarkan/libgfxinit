@@ -18,7 +18,6 @@ private package HW.GFX.GMA.Connectors is
                     Reason => "Only effects some platforms");
    procedure Post_Reset_Off;
    procedure Initialize;
-   procedure Pre_PLL (Port_Cfg : Port_Config);
    pragma Warnings (GNATprove, On, "subprogram ""*"" has no effect");
 
    pragma Warnings (GNATprove, Off, "unused variable ""P*""",

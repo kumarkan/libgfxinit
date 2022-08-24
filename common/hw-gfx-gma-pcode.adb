@@ -86,13 +86,14 @@ package body HW.GFX.GMA.PCode is
 
    procedure Mailbox_Read
      (MBox        : in     Word32;
+      Command     : in     Word64 := 0;
       Wait_Ready  : in     Boolean := False;
       Wait_Ack    : in     Boolean := True;
       Reply       :    out Word64;
       Success     :    out Boolean)
    is
    begin
-      Mailbox_Write_Read (MBox, 0, Reply, Wait_Ready, Wait_Ack, Success);
+      Mailbox_Write_Read (MBox, Command, Reply, Wait_Ready, Wait_Ack, Success);
    end Mailbox_Read;
 
    procedure Mailbox_Request

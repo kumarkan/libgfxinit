@@ -16,6 +16,7 @@
 with HW.GFX.I2C;
 with HW.GFX.GMA.Config;
 with HW.GFX.GMA.Config_Helpers;
+with HW.GFX.GMA.Connectors;
 with HW.GFX.GMA.I2C;
 with HW.GFX.GMA.DP_Aux_Ch;
 with HW.GFX.GMA.Panel;
@@ -75,12 +76,26 @@ is
 
             declare
                DP_Port : constant GMA.DP_Port :=
-                 (case Port is
+                 (if Config.Has_Type_C_Ports
+                  then
+                    (case Port is
+                     when eDP       => DP_A,
+                     when DP1       => DP_B,
+                     when DP2       => DP_C,
+                     when USBC1_DP  => DP_D,
+                     when USBC2_DP  => DP_E,
+		     when USBC3_DP  => DP_F,
+		     when USBC4_DP  => DP_G,
+		     when USBC5_DP  => DP_H,
+		     when USBC6_DP  => DP_I,
+		     when others    => GMA.DP_Port'First)
+                  else
+                    (case Port is
                      when eDP       => DP_A,
                      when DP1       => DP_B,
                      when DP2       => DP_C,
                      when DP3       => DP_D,
-                     when others    => GMA.DP_Port'First);
+                     when others    => GMA.DP_Port'First));
             begin
                DP_Aux_Ch.I2C_Read
                  (Port     => DP_Port,
@@ -166,6 +181,7 @@ is
       Port_Idx : Port_List_Range := Port_List_Range'First;
       Success  : Boolean;
    begin
+      pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
       Configs := (Pipe_Index =>
                     (Port        => Disabled,
                      Mode        => Invalid_Mode,

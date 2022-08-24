@@ -15,6 +15,7 @@
 with HW.Debug;
 with GNAT.Source_Info;
 with HW.GFX.GMA.PLLs.Combo_Phy;
+with HW.GFX.GMA.PLLs.DKL;
 with HW.GFX.GMA.Config;
 
 package body HW.GFX.GMA.PLLs
@@ -56,6 +57,26 @@ is
       PLL      :    out T;
       Success  :    out Boolean)
    is
+      function Port_PLL_Match (Port : GPU_Port; PLL : T) return Boolean
+      is
+      begin
+         if Port in Combo_Port and PLL in Combo_DPLLs then
+	    return True;
+	 elsif Port in USBC_Port and PLL in DKL_DPLLs then
+	    if (Port = DDI_TC1 and PLL = TCPLL1) or
+	       (Port = DDI_TC2 and PLL = TCPLL2) or
+	       (Port = DDI_TC3 and PLL = TCPLL3) or
+	       (Port = DDI_TC4 and PLL = TCPLL4) or
+	       (Port = DDI_TC5 and PLL = TCPLL5) or
+	       (Port = DDI_TC6 and PLL = TCPLL6)
+	    then
+	       return True;
+            end if;
+	 end if;
+
+         return False;
+      end Port_PLL_Match;
+
       function Config_Matches (PE : HW.GFX.GMA.PLLs.PLL_State) return Boolean
       is
       begin
@@ -70,6 +91,7 @@ is
       for P in Configurable_DPLLs loop
          Success := PLLs (P).Use_Count /= 0 and
                      PLLs (P).Use_Count /= Count_Range'Last and
+		     Port_PLL_Match (Port_Cfg.Port, P) and
                      Config_Matches (PLLs (P));
          if Success then
             PLL := P;
@@ -79,9 +101,14 @@ is
       end loop;
 
       for P in Configurable_DPLLs loop
-         if PLLs (P).Use_Count = 0 then
+         if PLLs (P).Use_Count = 0 and Port_PLL_Match (Port_Cfg.Port, P) then
             PLL := P;
-            Combo_Phy.On (PLL, Port_Cfg, Success);
+            if P in Combo_DPLLs then
+               Combo_Phy.On (PLL, Port_Cfg, Success);
+            else--if P in DKL_DPLLs then
+               DKL.On (PLL, Port_Cfg, Success);
+            end if;
+
             if Success then
                PLLs (PLL) :=
                  (Use_Count   => 1,
@@ -101,8 +128,12 @@ is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
-      if PLL in Configurable_DPLLs then
+      PLLs (PLL).Use_Count := 0;
+
+      if PLL in Combo_DPLLs then
          Combo_Phy.Free (PLL);
+      elsif PLL in DKL_DPLLs then
+         DKL.Free (PLL);
       end if;
    end Free;
 
@@ -111,6 +142,7 @@ is
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
       Combo_Phy.All_Off;
+      DKL.All_Off;
    end All_Off;
 
    function Register_Value (PLL : T) return Word32
@@ -118,8 +150,9 @@ is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
-      if PLL in Configurable_DPLLs then
-            return Combo_Phy.Register_Value (PLL);
+      -- Only required for combo ports
+      if PLL in Combo_DPLLs then
+         return Combo_Phy.Register_Value (PLL);
       end if;
 
       return 0;

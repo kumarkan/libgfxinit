@@ -13,9 +13,25 @@
 --
 
 with HW.GFX.GMA;
+with HW.GFX.GMA.DP_Info;
 
 package HW.GFX.GMA.Connectors.TC is
 
-   procedure Pre_PLL (Port : USBC_Port);
+   procedure Connect (Port : in USBC_Port; Success: out Boolean);
+   procedure Disconnect (Port : USBC_Port);
+   procedure Program_DP_Mode (P : USBC_Port; Lane_Count : Natural);
+   procedure Set_Lane_Count (Port : USBC_Port; Lanes : Natural);
+
+   procedure Set_Signal_Levels
+     (Port        : USBC_Port;
+      Link        : DP_Link;
+      Train_Set   : DP_Info.Train_Set);
+
+   type TC_Cold_Request_Type is (Block, Unblock);
+   procedure TC_Cold_Request
+     (Request : in     TC_Cold_Request_Type;
+      Success :    out Boolean);
+
+   procedure Enable_HDMI (Port : USBC_Port);
 
 end HW.GFX.GMA.Connectors.TC;

@@ -293,6 +293,11 @@ private package HW.GFX.GMA.Config is
    ----------- Transcoder -------
    Need_Early_Transcoder_Setup   : <genbool> := Tigerlake_On;
 
+   ----------- Planes -----------
+   Has_Mbus_Dbox_Credits         : <genbool> := Tigerlake_On;
+   Has_Wide_Watermarks           : <genbool> := Tigerlake_On;
+   Has_TGL_Plane_Control         : <genbool> := Tigerlake_On;
+
    ----------- Rawclk -----------
    Need_Rawclk_Numerator         : <genbool> := Tigerlake_On;
 

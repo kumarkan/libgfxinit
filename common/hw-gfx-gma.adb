@@ -849,7 +849,8 @@ is
       Clear    : in     Boolean := True;
       Success  :    out Boolean)
    is
-      GMA_Phys_Base      : constant PCI.Index := 16#5c#;
+      GMA_Phys_Base      : constant PCI.Index :=
+         (if Config.Tigerlake_On then 16#c0# else 16#5c#);
       GMA_Phys_Base_Mask : constant := 16#fff0_0000#;
 
       Phys_Base : Word32;

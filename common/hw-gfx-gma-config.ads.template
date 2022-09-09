@@ -193,7 +193,7 @@ private package HW.GFX.GMA.Config is
    Has_Tertiary_Pipe             : <ilkbool> := Ivybridge_On;
    Disable_Trickle_Feed          : <genbool> := not Gen_Haswell;
    Pipe_Enabled_Workaround       : <hswbool> := CPU_Broadwell;
-   Has_EDP_Transcoder            : <genbool> := Haswell_On;
+   Has_EDP_Transcoder            : <genbool> := Haswell_On and not Tigerlake_On;
    Use_PDW_For_EDP_Scaling       : <hswbool> := CPU_Haswell;
    Has_Pipe_DDI_Func             : <genbool> := Haswell_On;
    Has_Trans_Clk_Sel             : <genbool> := Haswell_On;
@@ -289,6 +289,9 @@ private package HW.GFX.GMA.Config is
 
    ----------- Type-C: ----------
    Has_Type_C_Ports              : <genbool> := Tigerlake_On;
+
+   ----------- Transcoder -------
+   Need_Early_Transcoder_Setup   : <genbool> := Tigerlake_On;
 
    ----------- Rawclk -----------
    Need_Rawclk_Numerator         : <genbool> := Tigerlake_On;

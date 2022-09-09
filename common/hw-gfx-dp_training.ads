@@ -14,6 +14,7 @@
 
 with HW.GFX.DP_Info;
 with HW.GFX.DP_Aux_Ch;
+with HW.GFX.GMA;
 
 private generic
 
@@ -36,23 +37,27 @@ private generic
       return DP_Info.DP_Pre_Emph;
 
    with procedure Set_Pattern
-     (Port        : T;
+     (Pipe        : GMA.Pipe_Index;
+      Port        : T;
       Link        : DP_Link;
       Pattern     : DP_Info.Training_Pattern);
 
    with procedure Set_Signal_Levels
      (Port        : T;
+      eDP         : Boolean;
       Link        : DP_Link;
       Train_Set   : DP_Info.Train_Set);
 
-   with procedure Off (Connector : T);
+   with procedure Off (Pipe : GMA.Pipe_Index; Connector : T);
 
 package HW.GFX.DP_Training
 is
 
    procedure Train_DP
-     (Port     : in     T;
+     (Pipe     : in     GMA.Pipe_Index;
+      Port     : in     T;
       Link     : in     DP_Link;
+      eDP      : in     Boolean;
       Success  :    out Boolean);
 
 end HW.GFX.DP_Training;

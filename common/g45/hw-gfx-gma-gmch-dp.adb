@@ -106,8 +106,11 @@ package body HW.GFX.GMA.GMCH.DP is
 
    pragma Warnings (GNATprove, Off, "unused variable ""Link""",
                     Reason => "Needed for a common interface");
+   pragma Warnings (GNATprove, Off, "unused variable ""Pipe""",
+                    Reason => "Needed for a common interface");
    procedure Set_Training_Pattern
-     (Port     : GMCH_DP_Port;
+     (Pipe     : Pipe_Index;
+      Port     : GMCH_DP_Port;
       Link     : DP_Link;
       Pattern  : DP_Info.Training_Pattern)
    is
@@ -119,7 +122,8 @@ package body HW.GFX.GMA.GMCH.DP is
    end Set_Training_Pattern;
 
    procedure Set_Signal_Levels
-     (Port        : GMCH_DP_Port;
+     (Pipe        : Pipe_Index;
+      Port        : GMCH_DP_Port;
       Link        : DP_Link;
       Train_Set   : DP_Info.Train_Set)
    is
@@ -148,6 +152,7 @@ package body HW.GFX.GMA.GMCH.DP is
    end Off;
    pragma Warnings (GNATprove, On, "unused variable ""Port""");
    pragma Warnings (GNATprove, On, "unused variable ""Link""");
+   pragma Warnings (GNATprove, On, "unused variable ""Pipe""");
 
    ----------------------------------------------------------------------------
 
@@ -196,7 +201,8 @@ package body HW.GFX.GMA.GMCH.DP is
                      Sync_Polarity or
                      DP_CTL_COLOR_RANGE_16_235);
       Training.Train_DP
-        (Port     => Port_Cfg.Port,
+        (Pipe     => Pipe_Index'First, -- unused
+         Port     => Port_Cfg.Port,
          Link     => Port_Cfg.DP,
          Success  => Success);
    end On;

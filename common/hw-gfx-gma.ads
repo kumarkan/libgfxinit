@@ -317,8 +317,10 @@ private
          Panel    : Panel_Control;
          Mode     : Mode_Type;
          Is_FDI   : Boolean;
+         Is_eDP   : Boolean;
          FDI      : DP_Link;
          DP       : DP_Link;
+         Pipe     : Pipe_Index;
       end record;
 
    type FDI_Training_Type is (Simple_Training, Full_Training, Auto_Training);

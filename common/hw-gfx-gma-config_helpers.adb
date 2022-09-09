@@ -216,8 +216,10 @@ is
             PCH_Port => To_PCH_Port (Port),
             Display  => To_Display_Type (Port),
             Panel    => To_Panel (Port),
+            Pipe     => Pipe,
             Mode     => Mode,
             Is_FDI   => Config.Is_FDI_Port (Port),
+            Is_eDP   => Port = eDP,
             FDI      => Default_DP,
             DP       => Default_DP);
 
@@ -252,8 +254,10 @@ is
             PCH_Port => PCH_Port'First,
             Display  => Display_Type'First,
             Panel    => No_Panel,
+            Pipe     => Pipe_Index'First,
             Mode     => Invalid_Mode,
             Is_FDI   => False,
+            Is_eDP   => False,
             FDI      => Default_DP,
             DP       => Default_DP);
       end if;

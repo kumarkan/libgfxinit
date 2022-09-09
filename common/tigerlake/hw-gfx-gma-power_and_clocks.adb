@@ -197,6 +197,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
    CDCLK_CD2X_DIV_SEL_2                           : constant := 2 * 2 ** 22;
    CDCLK_CD2X_PIPE_NONE                           : constant := 7 * 2 ** 19;
    CDCLK_CTL_CD_FREQ_DECIMAL_MASK                 : constant := 16#7ff#;
+   CDCLK_PLL_ENABLE_FREQ_REQ_ACK                  : constant := 1 * 2 ** 22;
+   CDCLK_PLL_ENABLE_FREQ_REQ                      : constant := 1 * 2 ** 23;
 
    ----------------------------------------------------------------------------
 
@@ -563,23 +565,46 @@ package body HW.GFX.GMA.Power_And_Clocks is
          return;
       end if;
 
-      Registers.Unset_Mask
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask     => CDCLK_PLL_ENABLE_PLL_ENABLE);
-      Registers.Wait_Unset_Mask
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask     => CDCLK_PLL_ENABLE_PLL_LOCK);
+      if Config.Has_CDClk_PLL_Crawl then
+         -- Write ratio without disabling, then submit frequency
+         -- change request, wait for ack and finally enable.
+         Registers.Write
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Value    => PLL_Ratio or
+                        CDCLK_PLL_ENABLE_PLL_ENABLE);
+         Registers.Write
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Value    => PLL_Ratio or
+                        CDCLK_PLL_ENABLE_PLL_ENABLE or
+                        CDCLK_PLL_ENABLE_FREQ_REQ);
+         Registers.Wait_Set_Mask
+           (Registers => Registers.CDCLK_PLL_ENABLE,
+            Mask      => CDCLK_PLL_ENABLE_PLL_LOCK or
+                         CDCLK_PLL_ENABLE_FREQ_REQ_ACK);
+         Registers.Write
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Value    => PLL_Ratio or
+                        CDCLK_PLL_ENABLE_PLL_ENABLE);
+      else
+         Registers.Unset_Mask
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Mask     => CDCLK_PLL_ENABLE_PLL_ENABLE);
+         Registers.Wait_Unset_Mask
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Mask     => CDCLK_PLL_ENABLE_PLL_LOCK);
 
-      Registers.Write
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Value    => PLL_Ratio);
-      Registers.Write
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Value    => PLL_Ratio or CDCLK_PLL_ENABLE_PLL_ENABLE);
-      Registers.Wait_Set_Mask
-        (Register => Registers.CDCLK_PLL_ENABLE,
-         Mask     => CDCLK_PLL_ENABLE_PLL_LOCK,
-         Success  => Success);
+         Registers.Write
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Value    => PLL_Ratio);
+         Registers.Write
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Value    => PLL_Ratio or CDCLK_PLL_ENABLE_PLL_ENABLE);
+         Registers.Wait_Set_Mask
+           (Register => Registers.CDCLK_PLL_ENABLE,
+            Mask     => CDCLK_PLL_ENABLE_PLL_LOCK,
+            Success  => Success);
+      end if;
+
 
       if not Success then
          Debug.Put_Line ("CDClk PLL failed to lock!");

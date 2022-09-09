@@ -57,4 +57,15 @@ private package HW.GFX.GMA.PCode is
    with
       Pre => Mailbox_Ready or Wait_Ready;
 
+   -- For reading data from PCode
+   procedure Mailbox_Read
+     (MBox        : in     Word32;
+      Command     : in     Word64 := 0;
+      Wait_Ready  : in     Boolean := False;
+      Wait_Ack    : in     Boolean := True;
+      Reply       :    out Word64;
+      Success     :    out Boolean)
+   with
+      Pre => Mailbox_Ready or Wait_Ready;
+
 end HW.GFX.GMA.PCode;

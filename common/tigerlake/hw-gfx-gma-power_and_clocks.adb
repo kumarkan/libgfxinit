@@ -19,6 +19,8 @@ with HW.GFX.GMA.Config;
 with HW.GFX.GMA.PCode;
 with HW.GFX.GMA.Registers;
 with HW.GFX.GMA.Transcoder;
+with HW.GFX.GMA.Connectors;
+with HW.GFX.GMA.Connectors.TC;
 
 use type HW.Word64;
 
@@ -250,12 +252,18 @@ package body HW.GFX.GMA.Power_And_Clocks is
            (Register => AUX_CTL_Regs (PD),
             Mask     => DP_AUX_CH_CTL_TBT_IO);
 
+         Connectors.TC.Connect (Aux_To_Port (PD), Success);
+         if not Success then
+            Debug.Put_Line ("Connection flow failed!");
+         end if;
       end if;
    end Pre_On;
 
    procedure Pre_Off (PD : Power_Domain) is
    begin
-      null;
+      if PD in AUX_USBC_Domain then
+         Connectors.TC.Disconnect (Aux_To_Port (PD));
+      end if;
    end Pre_Off;
 
    procedure Post_On (PD : Power_Domain)
@@ -665,7 +673,7 @@ package body HW.GFX.GMA.Power_And_Clocks is
             return;
       end case;
 
-      Channels := Natural(Shift_Right(Result and 16#f0#, 4));
+      Channels := Natural (Shift_Right (Result and 16#f0#, 4));
       Found := False;
       for I in Buddy_Info'Range loop
          if Buddy_Info (I).DRAM_Type = Module_Type and
@@ -833,6 +841,11 @@ package body HW.GFX.GMA.Power_And_Clocks is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
+      Connectors.TC.TC_Cold_Request (Connectors.TC.Block, Success);
+      if not Success then
+         Debug.Put_Line ("Failed to unblock TCCOLD");
+      end if;
+
       for PD in Power_Domain loop
         if not Need_PD (PD, Old_Configs) and Need_PD (PD, New_Configs) then
            PD_On (PD);
@@ -854,6 +867,10 @@ package body HW.GFX.GMA.Power_And_Clocks is
         end if;
       end loop;
 
+      Connectors.TC.TC_Cold_Request (Connectors.TC.Unblock, Success);
+      if not Success then
+         Debug.Put_Line ("Failed to unblock TCCOLD");
+      end if;
    end Power_Down;
 
    procedure Pre_All_Off is

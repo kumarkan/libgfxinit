@@ -69,7 +69,6 @@ is
       MBCTL,
       UCGCTL1,
       UCGCTL2,
-      GEN10_DFR_RATIO_EN_AND_CHICKEN,
       GMCH_CLKCFG,
       GMCH_HPLLVCO_MOBILE,
       GMCH_HPLLVCO,
@@ -110,10 +109,13 @@ is
       HOTPLUG_CTL,
       TC_HOTPLUG_CTL,
       DISPLAY_ERR_FATAL_MASK,
-      GEN11_DE_HPD_ISR,
       DBUF_CTL_S2,
+      DBUF_CTL_S3,
+      MBUS_CTL,
+      GEN11_DE_HPD_ISR,
+      DBUF_CTL_S1,
       ARB_CTL,
-      DBUF_CTL,
+      DBUF_CTL_S0,
       MBUS_ABOX_CTL,
       MBUS_ABOX1_CTL,
       MBUS_ABOX2_CTL,
@@ -1795,8 +1797,10 @@ is
       FBA_CFB_BASE          => 16#04_3200# / Register_Width,
       IPS_CTL               => 16#04_3408# / Register_Width,
       ARB_CTL               => 16#04_5000# / Register_Width,
-      DBUF_CTL              => 16#04_5008# / Register_Width,
-      DBUF_CTL_S2           => 16#04_4fe8# / Register_Width,
+      DBUF_CTL_S0           => 16#04_5008# / Register_Width,
+      DBUF_CTL_S1           => 16#04_4fe8# / Register_Width,
+      DBUF_CTL_S2           => 16#04_4300# / Register_Width,
+      DBUF_CTL_S3           => 16#04_4304# / Register_Width,
       NDE_RSTWRN_OPT        => 16#04_6408# / Register_Width,
       GEN8_CHICKEN_DCPR_1   => 16#04_6430# / Register_Width,
       GEN11_CHICKEN_DCPR_2  => 16#04_6434# / Register_Width,
@@ -2209,7 +2213,7 @@ is
       TCSS_DDI_STATUS_4        => 16#16_150c# / Register_Width,
 
       DISPLAY_ERR_FATAL_MASK   => 16#04_421c# / Register_Width,
-      GEN10_DFR_RATIO_EN_AND_CHICKEN => 16#00_9550# / Register_Width);
+      MBUS_CTL                 => 16#04_438c# / Register_Width);
 
    subtype Registers_Index is Registers_Invalid_Index range
       Registers_Invalid_Index'Succ (Invalid_Register) ..

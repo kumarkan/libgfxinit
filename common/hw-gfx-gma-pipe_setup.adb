@@ -218,6 +218,8 @@ package body HW.GFX.GMA.Pipe_Setup is
       Format : constant Word32 := 6 * 2 ** 26;
       PRI : Word32 := DSPCNTR_ENABLE or Format;
       Plane_Ctl : Word32 := 0;
+      function PLANE_CTL_ARB_SLOTS (N : Word32) return Word32
+      is (Shift_Left (N, 28));
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
@@ -239,8 +241,17 @@ package body HW.GFX.GMA.Pipe_Setup is
 
             Plane_Ctl := PLANE_CTL_PLANE_ENABLE or
                          PLANE_CTL_TILED_SURFACE (FB.Tiling) or
-                         PLANE_CTL_PLANE_ROTATION (FB.Rotation);
-
+                         PLANE_CTL_PLANE_ROTATION (FB.Rotation) or
+			 (if Config.Has_TGL_Plane_Control
+			  then PLANE_CTL_TGL_SRC_PIX_FMT_RGB_32B_8888
+			  else PLANE_CTL_SRC_PIX_FMT_RGB_32B_8888) or
+			 (if Config.Need_Pipe_Arb_Slots
+			  then PLANE_CTL_ARB_SLOTS (1)
+			  else 0) or
+			 (if not Config.Has_TGL_Plane_Control
+			  then PLANE_CTL_PLANE_GAMMA_DISABLE
+			  else 0);
+			 
             if Config.Has_TGL_Plane_Control then
                Registers.Write
                  (Register => Controller.PLANE_COLOR_CTL,
@@ -248,14 +259,7 @@ package body HW.GFX.GMA.Pipe_Setup is
                Registers.Write
                  (Register => Controller.PLANE_AUX_DIST,
                   Value    => 0);
-
-               Plane_Ctl := Plane_Ctl or PLANE_CTL_TGL_SRC_PIX_FMT_RGB_32B_8888;
-            else
-               Plane_Ctl := Plane_Ctl or
-                            PLANE_CTL_SRC_PIX_FMT_RGB_32B_8888 or
-                            PLANE_CTL_PLANE_GAMMA_DISABLE;
             end if;
-
             Registers.Write (Controller.PLANE_CTL, Plane_Ctl);
             Registers.Write (Controller.PLANE_OFFSET, Offset);
             Registers.Write (Controller.PLANE_SIZE, Encode (Width, Height));
@@ -326,8 +330,40 @@ package body HW.GFX.GMA.Pipe_Setup is
       function MBUS_DBOX_A_CREDIT (C : A_CREDIT) return Word32
       is (Word32 (C));
 
+      type B2B_TRANS_MAX is new Natural range 0 .. 31;
+      function MBUS_DBOX_B2B_TRANSACTIONS_MAX (B : B2B_TRANS_MAX) return Word32
+      is (Shift_Left (Word32 (B), 20));
+
+      type B2B_TRANS_DELAY is new Natural range 0 .. 7;
+      function MBUS_DBOX_B2B_TRANSACTIONS_DELAY (B : B2B_TRANS_DELAY) return Word32
+      is (Shift_Left (Word32 (B), 17));
+      MBUS_DBOX_REGULATE_B2B_TRANSACTIONS_EN : constant := 1 * 2 ** 16;
+
+      procedure Program_Mbus_Dbox_Credits is
+         Tmp : Word32;
+      begin
+         Tmp := MBUS_DBOX_B2B_TRANSACTIONS_MAX (16) or
+                MBUS_DBOX_B2B_TRANSACTIONS_DELAY (1) or
+                MBUS_DBOX_REGULATE_B2B_TRANSACTIONS_EN;
+
+         if Config.Has_New_Mbus_Dbox_Credits then
+            Tmp := Tmp or MBUS_DBOX_BW_CREDIT (2) or
+                          MBUS_DBOX_B_CREDIT (8) or
+                          MBUS_DBOX_A_CREDIT (6);
+	 else
+            Tmp := Tmp or MBUS_DBOX_BW_CREDIT (2) or
+                          MBUS_DBOX_B_CREDIT (12) or
+                          MBUS_DBOX_A_CREDIT (2);
+	 end if;
+
+         Registers.Write
+           (Register => Controller.MBUS_DBOX_CTL,
+            Value    => Tmp);
+      end Program_Mbus_Dbox_Credits;
+
       PIXEL_ROUNDING_TRUNC_FB_PASSTHRU : constant := 1 * 2 ** 15;
       PER_PIXEL_ALPHA_BYPASS_EN        : constant := 1 * 2 ** 7;
+      UNDERRUN_RECOVERY_DISABLE        : constant := 1 * 2 ** 30;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
@@ -335,7 +371,10 @@ package body HW.GFX.GMA.Pipe_Setup is
          Registers.Set_Mask
            (Register => Controller.PIPE_CHICKEN,
             Mask     => PER_PIXEL_ALPHA_BYPASS_EN or
-                        PIXEL_ROUNDING_TRUNC_FB_PASSTHRU);
+                        PIXEL_ROUNDING_TRUNC_FB_PASSTHRU or
+			(if Config.Need_Underrun_Rec_Disable
+			 then UNDERRUN_RECOVERY_DISABLE
+			 else 0));
       end if;
 
       if Config.Has_Plane_Control then
@@ -343,11 +382,7 @@ package body HW.GFX.GMA.Pipe_Setup is
       end if;
 
       if Config.Has_Mbus_Dbox_Credits then
-         Registers.Write
-           (Register => Controller.MBUS_DBOX_CTL,
-            Value    => MBUS_DBOX_BW_CREDIT (2) or
-                        MBUS_DBOX_B_CREDIT (12) or
-                        MBUS_DBOX_A_CREDIT (2));
+         Program_Mbus_Dbox_Credits;
       end if;
 
       if Framebuffer.Offset = VGA_PLANE_FRAMEBUFFER_OFFSET then
@@ -385,7 +420,8 @@ package body HW.GFX.GMA.Pipe_Setup is
       if Config.Has_Pipeconf_Misc then
          Registers.Write
            (Register => Controller.PIPEMISC,
-            Value    => Transcoder.BPC_Conf (Dither_BPC, Dither));
+            Value    => Transcoder.BPC_Conf (Dither_BPC, Dither) or
+	                (if Config.Has_TGL_Plane_Control then 1 * 2 ** 8 else 0)); -- PIPEMISC_PIXEL_ROUNDING_TRUNC
       end if;
    end Setup_Display;
 

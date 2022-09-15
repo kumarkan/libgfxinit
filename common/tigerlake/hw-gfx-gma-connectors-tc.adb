@@ -44,6 +44,25 @@ package body HW.GFX.GMA.Connectors.TC is
       DDI_TC5 => Registers.DKL_DP_MODE_5,
       DDI_TC6 => Registers.DKL_DP_MODE_6);
 
+   DKL_PCS_DW5 : constant Port_Regs_Array :=
+      Port_Regs_Array'
+     (DDI_TC1 => Registers.DKL_PCS_DW5_1,
+      DDI_TC2 => Registers.DKL_PCS_DW5_2,
+      DDI_TC3 => Registers.DKL_PCS_DW5_3,
+      DDI_TC4 => Registers.DKL_PCS_DW5_4,
+      others  => Registers.DKL_PCS_DW5_1);
+
+   TCSS_DDI_STATUS : constant Port_Regs_Array :=
+      Port_Regs_Array'
+     (DDI_TC1 => Registers.TCSS_DDI_STATUS_1,
+      DDI_TC2 => Registers.TCSS_DDI_STATUS_2,
+      DDI_TC3 => Registers.TCSS_DDI_STATUS_3,
+      DDI_TC4 => Registers.TCSS_DDI_STATUS_4,
+      others  => Registers.TCSS_DDI_STATUS_1);
+
+   TCSS_DDI_STATUS_HPD_LIVE_STATUS_ALT : constant := 1 * 2 ** 0;
+   TCSS_DDI_STATUS_READY               : constant := 1 * 2 ** 2;
+
    function DP_PIN_ASSIGNMENT_SHIFT (P : USBC_Port) return natural is
      (case P is
       when DDI_TC1 => 0,
@@ -144,7 +163,8 @@ package body HW.GFX.GMA.Connectors.TC is
    DDI_BUF_CTL_PORT_WIDTH_2_LANES   : constant :=      1 * 2 **  1;
    DDI_BUF_CTL_PORT_WIDTH_4_LANES   : constant :=      3 * 2 **  1;
    DDI_BUF_CTL_IDLE_STATUS          : constant :=      1 * 2 **  7;
-   DDI_BUF_CTL_STAGGER_DELAY_MASK   : constant := 16#ff# * 2 **  8;
+   DDI_BUF_CTL_TC_PHY_OWNERSHIP     : constant :=      1 * 2 **  6;
+
    type DDI_BUF_CTL_PORT_WIDTH_T is array (HW.GFX.DP_Lane_Count) of Word32;
    DDI_BUF_CTL_PORT_WIDTH : constant DDI_BUF_CTL_PORT_WIDTH_T :=
       DDI_BUF_CTL_PORT_WIDTH_T'
@@ -168,7 +188,7 @@ package body HW.GFX.GMA.Connectors.TC is
 
    type Buffer_Trans_Range is new natural range 0 .. 9;
    type Buffer_Trans_Array is array (Buffer_Trans_Range) of Buffer_Trans;
-   Buffer_Trans_DP_HBR2 : constant Buffer_Trans_Array :=
+   TGL_Buffer_Trans_DP_HBR2 : constant Buffer_Trans_Array :=
       Buffer_Trans_Array'(
      (16#7#, 16#0#, 16#00#),
      (16#5#, 16#0#, 16#05#),
@@ -180,7 +200,7 @@ package body HW.GFX.GMA.Connectors.TC is
      (16#2#, 16#0#, 16#00#),
      (16#0#, 16#0#, 16#0B#),
      (16#0#, 16#0#, 16#00#));
-   Buffer_Trans_DP_HBR : constant Buffer_Trans_Array :=
+   TGL_Buffer_Trans_DP_HBR : constant Buffer_Trans_Array :=
       Buffer_Trans_Array'(
      (16#7#, 16#0#, 16#00#),
      (16#5#, 16#0#, 16#05#),
@@ -204,7 +224,31 @@ package body HW.GFX.GMA.Connectors.TC is
      (16#0#, 16#0#, 16#7#),
      (16#0#, 16#0#, 16#8#),
      (16#0#, 16#0#, 16#A#));
-
+   ADL_Buffer_Trans_DP_HBR2 : constant Buffer_Trans_Array :=
+     Buffer_Trans_Array'(
+     (16#7#, 16#0#, 16#00#),
+     (16#5#, 16#0#, 16#04#),
+     (16#2#, 16#0#, 16#0a#),
+     (16#0#, 16#0#, 16#18#),
+     (16#5#, 16#0#, 16#00#),
+     (16#2#, 16#0#, 16#06#),
+     (16#0#, 16#0#, 16#14#),
+     (16#2#, 16#0#, 16#00#),
+     (16#0#, 16#0#, 16#09#),
+     (16#0#, 16#0#, 16#00#));
+   ADL_Buffer_Trans_DP_HBR : constant Buffer_Trans_Array :=
+     Buffer_Trans_Array'(
+     (16#7#, 16#0#, 16#01#),
+     (16#5#, 16#0#, 16#06#),
+     (16#2#, 16#0#, 16#0b#),
+     (16#0#, 16#0#, 16#17#),
+     (16#5#, 16#0#, 16#00#),
+     (16#2#, 16#0#, 16#08#),
+     (16#0#, 16#0#, 16#14#),
+     (16#2#, 16#0#, 16#00#),
+     (16#0#, 16#0#, 16#0b#),
+     (16#0#, 16#0#, 16#00#));
+        
    type Vswing_Regs_Record is record
       DKL_TX_PMD_LANE_SUS  : Registers.Registers_Index;
       DKL_TX_DPCNTL0       : Registers.Registers_Index;
@@ -365,7 +409,7 @@ package body HW.GFX.GMA.Connectors.TC is
                         when 1 => DFLEXDPMLE1_DPMLETC_ML0 (Port),
                         -- ML1_0 is not reversed, ML3_2 is reverse
                         when 2 => DFLEXDPMLE1_DPMLETC_ML1_0 (Port),
-			-- symmetric
+                        -- symmetric
                         when 4 => DFLEXDPMLE1_DPMLETC_ML3_0 (Port),
                         when others => 0));
    end Set_Lane_Count;
@@ -376,10 +420,17 @@ package body HW.GFX.GMA.Connectors.TC is
    is
       Status : Boolean;
    begin
-      Registers.Is_Set_Mask
-        (Register => Fia_Regs (Port).PORT_TX_DFLEXDPPMS,
-         Mask     => DP_PHY_MODE_STATUS_COMPLETE (Port),
-         Result   => Status);
+      if Config.Need_TC_PHY_Ownership then
+         Registers.Is_Set_Mask
+           (Register => TCSS_DDI_STATUS (Port),
+            Mask     => TCSS_DDI_STATUS_READY,
+            Result   => Status);
+      else
+         Registers.Is_Set_Mask
+           (Register => Fia_Regs (Port).PORT_TX_DFLEXDPPMS,
+            Mask     => DP_PHY_MODE_STATUS_COMPLETE (Port),
+            Result   => Status);
+      end if;
       return Status;
    end Is_DP_Phy_Mode_Status_Complete;
 
@@ -405,22 +456,40 @@ package body HW.GFX.GMA.Connectors.TC is
          end Get_Lane_Assignment_Count;
    begin
       if not Is_DP_Phy_Mode_Status_Complete (Port) then
-         Debug.Put_Line ("PHY Mode status complete not set");
+         Debug.Put_Line ("DP PHY mode status not complete");
          Success := False;
          return;
       end if;
 
-      Registers.Set_Mask
-        (Register => Fia_Regs (Port).PORT_TX_DFLEXDPCSSS,
-         Mask     => DP_PHY_MODE_STATUS_NOT_SAFE (Port));
+      -- Take ownership and check live status
+      if Config.Need_TC_PHY_Ownership then
+         -- TODO: also check SDEISR for legacy "connection"
+         Registers.Is_Set_Mask
+           (Register => TCSS_DDI_STATUS (Port),
+            Mask     => TCSS_DDI_STATUS_HPD_LIVE_STATUS_ALT,
+            Result   => Success);
 
-      Registers.Is_Set_Mask
-        (Register => Fia_Regs (Port).PORT_TX_DFLEXDPSP,
-         Mask     => TC_LIVE_STATE_TC (Port),
-         Result   => Success);
+         if Success then
+            Registers.Set_Mask
+              (Register => DDI_BUF_CTL (Port),
+               Mask     => DDI_BUF_CTL_TC_PHY_OWNERSHIP);
+	 end if;
+      else
+         -- TODO: also check SDEISR for legacy "connection"
+         Registers.Is_Set_Mask
+           (Register => Fia_Regs (Port).PORT_TX_DFLEXDPSP,
+            Mask     => TC_LIVE_STATE_TC (Port),
+            Result   => Success);
+
+         if Success then
+            Registers.Set_Mask
+              (Register => Fia_Regs (Port).PORT_TX_DFLEXDPCSSS,
+               Mask     => DP_PHY_MODE_STATUS_NOT_SAFE (Port));
+         end if;
+      end if;
 
       if not Success then
-         Debug.Put_Line ("Port is not connected!");
+         pragma Debug (Debug.Put_Line ("Type-C Port is not connected."));
       end if;
 
       Set_Lane_Count (Port, Get_Lane_Assignment_Count (Port));
@@ -430,13 +499,19 @@ package body HW.GFX.GMA.Connectors.TC is
 
    procedure Disconnect (Port : USBC_Port) is
    begin
-      Registers.Unset_Mask
-        (Register => Fia_Regs (Port).PORT_TX_DFLEXDPCSSS,
-         Mask     => Word32 (Fia_Index (Port)));
+      if Config.Need_TC_PHY_Ownership then
+         Registers.Unset_Mask
+           (Register => DDI_BUF_CTL (Port),
+            Mask     => DDI_BUF_CTL_TC_PHY_OWNERSHIP);
+      else
+         Registers.Unset_Mask
+           (Register => Fia_Regs (Port).PORT_TX_DFLEXDPCSSS,
+            Mask     => Word32 (Fia_Index (Port)));
 
-      Registers.Wait_Unset_mask
-        (Register => Fia_Regs (Port).PORT_TX_DFLEXDPPMS,
-         Mask     => DP_PHY_MODE_STATUS_COMPLETE (Port));
+         Registers.Wait_Unset_mask
+           (Register => Fia_Regs (Port).PORT_TX_DFLEXDPPMS,
+            Mask     => DP_PHY_MODE_STATUS_COMPLETE (Port));
+      end if;
    end Disconnect;
 
    ---------------------------------------------------------------------
@@ -452,6 +527,14 @@ package body HW.GFX.GMA.Connectors.TC is
          Shift_Left (Buf_Trans.Deemphasis_Control, 8) or
          Shift_Left (Buf_Trans.Preshoot_Control, 13);
       DKL_TX_DP20BITMODE : constant := 1 * 2 ** 2;
+
+      function DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (N : Word32) return Word32
+      is (Shift_Left (N and 16#3#, 3));
+      function DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (N : Word32) return Word32
+      is (Shift_Left (N and 16#3#, 5));
+
+      DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1_MASK : constant := 16#18#;
+      DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2_MASK : constant := 16#60#;
    begin
       for Lane in 0 .. 1 loop
          Set_HIP_For_Port (Port, Lane);
@@ -462,6 +545,31 @@ package body HW.GFX.GMA.Connectors.TC is
             (Vswing_Regs (Port).DKL_TX_DPCNTL1, DPcnt_Mask, DPcnt_Val);
          Registers.Unset_Mask
             (Vswing_Regs (Port).DKL_TX_DPCNTL2, DKL_TX_DP20BITMODE);
+
+         if Config.Need_Loadgen_Select then
+            declare
+               Val : Word32;
+            begin
+               -- if Port in USBC1_HDMI .. USBC6_HDMI then
+               --    if Lane = 0 then
+               --       Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (0) or
+               --              DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (2);
+               --    else
+               --       Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (3) or
+               --              DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (3);
+               --    end if;
+               -- else
+                  Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (3) or
+                         DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (3);
+               -- end if;
+
+               Registers.Unset_And_Set_Mask
+                 (Register   => Vswing_Regs (Port).DKL_TX_DPCNTL2,
+                  Mask_Unset => DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1_MASK or
+                                DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2_MASK,
+                  Mask_Set   => Val);
+            end;
+         end if;
       end loop;
 
    end Set_Vswing_And_Deemphasis;
@@ -473,22 +581,7 @@ package body HW.GFX.GMA.Connectors.TC is
       Link        : DP_Link;
       Train_Set   : DP_Info.Train_Set)
    is
-      function DDI_BUF_CTL_STAGGER_DELAY
-         (Bandwidth : DP_Bandwidth) return Word32
-      is
-      begin
-         -- The stagger delay specifies the number of symbol clocks' worth of
-         -- delay to used to stagger assertion/deassertion of the port lane
-         -- enables. The PRM states the target time recommended is 100ns or
-         -- greater. The delay should be based on link clock frequency.
-         -- e.g. 270 MHz clock = 1 / 270 MHz = 3.7ns, 100ns / 3.7 ns = 27.02
-         -- symbols, which should be rounded up to 28.
-         case Bandwidth is
-         when DP_Bandwidth_2_7 => return Shift_Left (28, 8);
-         when others => return 0;
-         end case;
-      end DDI_BUF_CTL_STAGGER_DELAY;
-
+      DKL_PCS_DW5_CORE_SOFTRESET : constant := 1 * 2 ** 11;
       function To_Buf_Trans_Index
          (Set : DP_Info.Train_Set) return Buffer_Trans_Range
       is
@@ -534,23 +627,40 @@ package body HW.GFX.GMA.Connectors.TC is
          Mask     => DDI_BUF_CTL_BUFFER_ENABLE,
          Result   => Was_Enabled);
 
-      if Link.Bandwidth > DP_Bandwidth_2_7 then
-         Buf_Trans := Buffer_Trans_DP_HBR2 (Entry_Index);
+      if Config.Has_TGL_Buffer_Translations then
+         if Link.Bandwidth > DP_Bandwidth_2_7 then
+            Buf_Trans := TGL_Buffer_Trans_DP_HBR2 (Entry_Index);
+         else
+            Buf_Trans := TGL_Buffer_Trans_DP_HBR (Entry_Index);
+         end if;
       else
-         Buf_Trans := Buffer_Trans_DP_HBR (Entry_Index);
+         if Link.Bandwidth > DP_Bandwidth_2_7 then
+            Buf_Trans := ADL_Buffer_Trans_DP_HBR2 (Entry_Index);
+         else
+            Buf_Trans := ADL_Buffer_Trans_DP_HBR (Entry_Index);
+         end if;
       end if;
 
       Set_Vswing_And_Deemphasis (Port, Buf_Trans);
+
+      if Config.Need_DP_Alt_Switch and not Was_Enabled then
+         for Lane in 0 .. 1 loop
+            Set_HIP_For_Port (Port, Lane);
+            Registers.Unset_Mask
+              (Register => DKL_PCS_DW5 (Port),
+               Mask     => DKL_PCS_DW5_CORE_SOFTRESET);
+         end loop;
+      end if;
 
       Registers.Unset_And_Set_Mask
         (Register    => DDI_BUF_CTL (Port),
          Mask_Unset  => DDI_BUF_CTL_TRANS_SELECT_MASK or
                         DDI_BUF_CTL_PORT_REVERSAL or
                         DDI_BUF_CTL_PORT_WIDTH_MASK,
-                        --DDI_BUF_CTL_STAGGER_DELAY_MASK,
          Mask_Set    => DDI_BUF_CTL_BUFFER_ENABLE or
-                        DDI_BUF_CTL_PORT_WIDTH (Link.Lane_Count));
-                        --DDI_BUF_CTL_STAGGER_DELAY (Link.Bandwidth));
+                        DDI_BUF_CTL_PORT_WIDTH (Link.Lane_Count) or
+                        (if Config.Need_TC_PHY_Ownership
+                         then DDI_BUF_CTL_TC_PHY_OWNERSHIP else 0));
       Registers.Posting_Read (DDI_BUF_CTL (Port));
 
       if not Was_Enabled then

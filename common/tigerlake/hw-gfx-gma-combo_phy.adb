@@ -90,15 +90,13 @@ package body HW.GFX.GMA.Combo_Phy is
       DW8 : Word32;
       DW1 : Word32;
    begin
-      -- DCC susclk divider programming: Read from lane 0
-      --    and write to the group
+      -- Read from lane 0 and write to the group
       Registers.Read (Phy_Regs (Phy).PORT_TX_DW8_LN0, DW8);
       DW8 := DW8 and not PORT_TX_DW8_ODCC_DIV_SEL_MASK;
       DW8 := DW8 or PORT_TX_DW8_ODCC_CLKSEL;
       DW8 := DW8 or 1 * 2 ** 29; -- ICL_PORT_TX_DW8_ODCC_CLK_DIV_SEL_DIV2
       Registers.Write (Phy_Regs (Phy).PORT_TX_DW8_GRP, DW8);
 
-      -- Set DCC discontinuous mode
       Registers.Read (Phy_Regs (Phy).PORT_PCS_DW1_LN0, DW1);
       DW1 := DW1 and not PORT_PCS_DW1_DCC_MODE_SELECT_MASK;
       DW1 := DW1 or PORT_PCS_DW1_DCC_MODE_SELECT_CONTINUOUS;

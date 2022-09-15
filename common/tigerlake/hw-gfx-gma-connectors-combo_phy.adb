@@ -153,7 +153,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
    type Buffer_Trans_DP_Range is new Natural range 0 .. 9;
    type Buffer_Trans_DP_Array is array (Buffer_Trans_DP_Range) of Buffer_Trans;
 
-   Buffer_Trans_DP_HBR : constant Buffer_Trans_DP_Array :=
+   TGL_Buffer_Trans_DP_HBR : constant Buffer_Trans_DP_Array :=
       Buffer_Trans_DP_Array'(
      (16#a#, 16#32#, 16#3f#, 16#00#),
      (16#a#, 16#4f#, 16#37#, 16#08#),
@@ -166,7 +166,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
      (16#6#, 16#7f#, 16#35#, 16#0a#),
      (16#6#, 16#7f#, 16#3f#, 16#00#));
 
-   Buffer_Trans_DP_HBR2 : constant Buffer_Trans_DP_Array :=
+   TGL_Buffer_Trans_DP_HBR2 : constant Buffer_Trans_DP_Array :=
       Buffer_Trans_DP_Array'(
      (16#a#, 16#35#, 16#3f#, 16#00#),
      (16#a#, 16#4f#, 16#37#, 16#08#),
@@ -179,7 +179,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
      (16#6#, 16#7b#, 16#35#, 16#0a#),
      (16#6#, 16#7f#, 16#3f#, 16#00#));
 
-   Buffer_Trans_DP_HBR2_U_Y : constant Buffer_Trans_DP_Array :=
+   TGL_Buffer_Trans_DP_HBR2_U_Y : constant Buffer_Trans_DP_Array :=
       Buffer_Trans_DP_Array'(
      (16#a#, 16#35#, 16#3f#, 16#00#),
      (16#a#, 16#4f#, 16#36#, 16#09#),
@@ -192,7 +192,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
      (16#6#, 16#7f#, 16#34#, 16#0b#),
      (16#6#, 16#7f#, 16#3f#, 16#00#));
 
-   Buffer_Trans_DP_HBR2_EDP_HBR3 : constant Buffer_Trans_DP_Array :=
+   TGL_Buffer_Trans_DP_HBR2_EDP_HBR3 : constant Buffer_Trans_DP_Array :=
       Buffer_Trans_DP_Array'(
      (16#a#, 16#35#, 16#3f#, 16#00#),
      (16#a#, 16#4f#, 16#37#, 16#08#),
@@ -205,7 +205,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
      (16#6#, 16#7f#, 16#35#, 16#0a#),
      (16#6#, 16#7f#, 16#3f#, 16#00#));
 
-   Buffer_Trans_EDP_HBR2 : constant Buffer_Trans_DP_Array :=
+   TGL_Buffer_Trans_EDP_HBR2 : constant Buffer_Trans_DP_Array :=
       Buffer_Trans_DP_Array'(
      (16#0#, 16#7F#, 16#3F#, 16#00#),
      (16#8#, 16#7F#, 16#38#, 16#07#),
@@ -217,6 +217,58 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
      (16#1#, 16#7F#, 16#3F#, 16#00#),
      (16#9#, 16#7F#, 16#38#, 16#07#),
      (16#9#, 16#7F#, 16#3F#, 16#00#));
+
+   ADL_Buffer_Trans_EDP_HBR3 : constant Buffer_Trans_DP_Array :=
+      Buffer_Trans_DP_Array'(
+     (16#a#, 16#35#, 16#3f#, 16#00#),
+     (16#a#, 16#4f#, 16#37#, 16#08#),
+     (16#c#, 16#71#, 16#30#, 16#0f#),
+     (16#6#, 16#7f#, 16#2b#, 16#14#),
+     (16#a#, 16#4c#, 16#3f#, 16#00#),
+     (16#c#, 16#73#, 16#34#, 16#0b#),
+     (16#6#, 16#7f#, 16#30#, 16#0f#),
+     (16#c#, 16#63#, 16#3f#, 16#00#),
+     (16#6#, 16#7f#, 16#38#, 16#07#),
+     (16#6#, 16#7f#, 16#3f#, 16#00#));
+
+   ADL_Buffer_Trans_EDP_HBR2 : constant Buffer_Trans_DP_Array :=
+      Buffer_Trans_DP_Array'(
+     (16#4#, 16#50#, 16#38#, 16#07#),
+     (16#4#, 16#58#, 16#35#, 16#0a#),
+     (16#4#, 16#60#, 16#34#, 16#0b#),
+     (16#4#, 16#6a#, 16#32#, 16#0d#),
+     (16#4#, 16#5e#, 16#38#, 16#07#),
+     (16#4#, 16#61#, 16#36#, 16#09#),
+     (16#4#, 16#6b#, 16#34#, 16#0b#),
+     (16#4#, 16#69#, 16#39#, 16#06#),
+     (16#4#, 16#73#, 16#37#, 16#08#),
+     (16#4#, 16#7a#, 16#38#, 16#07#));
+
+   ADL_Buffer_Trans_DP_HBR3 : constant Buffer_Trans_DP_Array :=
+      Buffer_Trans_DP_Array'(
+     (16#a#, 16#35#, 16#3f#, 16#00#),
+     (16#a#, 16#4f#, 16#37#, 16#08#),
+     (16#c#, 16#71#, 16#30#, 16#0f#),
+     (16#6#, 16#7f#, 16#2b#, 16#14#),
+     (16#a#, 16#4c#, 16#3f#, 16#00#),
+     (16#c#, 16#73#, 16#34#, 16#0b#),
+     (16#6#, 16#7f#, 16#30#, 16#0f#),
+     (16#c#, 16#63#, 16#3f#, 16#00#),
+     (16#6#, 16#7f#, 16#38#, 16#07#),
+     (16#6#, 16#7f#, 16#3f#, 16#00#));
+
+   ADL_Buffer_Trans_DP_HBR : constant Buffer_Trans_DP_Array :=
+      Buffer_Trans_DP_Array'(
+     (16#a#, 16#35#, 16#3f#, 16#00#),
+     (16#a#, 16#4f#, 16#37#, 16#08#),
+     (16#c#, 16#71#, 16#31#, 16#0e#),
+     (16#6#, 16#7f#, 16#2c#, 16#13#),
+     (16#a#, 16#4c#, 16#3f#, 16#00#),
+     (16#c#, 16#73#, 16#34#, 16#0b#),
+     (16#6#, 16#7f#, 16#2f#, 16#10#),
+     (16#c#, 16#7c#, 16#3c#, 16#03#),
+     (16#6#, 16#7f#, 16#35#, 16#0a#),
+     (16#6#, 16#7f#, 16#3f#, 16#00#));
 
    PORT_CL_DW10_PWR_DOWN_LN_MASK  : constant := 16#f# * 2 ** 4;
    PORT_CL_DW10_PWR_UP_ALL        : constant :=     0 * 2 ** 4;
@@ -397,6 +449,45 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
       Link        : DP_Link;
       Train_Set   : DP_Info.Train_Set)
    is
+      function Get_Buf_Trans_Table
+        (eDP : Boolean;
+         Bandwidth : DP_Bandwidth) return Buffer_Trans_DP_Array is
+      begin
+         if Config.Has_TGL_Buffer_Translations then
+            if eDP then
+               if Link.Bandwidth > DP_Bandwidth_5_4 then
+                  return TGL_Buffer_Trans_DP_HBR2_EDP_HBR3;
+               else
+                  return TGL_Buffer_Trans_DP_HBR;
+               end if;
+            else
+               if Link.Bandwidth > DP_Bandwidth_2_7 then
+                  if Config.Is_LP then
+                     return TGL_Buffer_Trans_DP_HBR2_U_Y;
+                 else
+                     return TGL_Buffer_Trans_DP_HBR2;
+                  end if;
+               else
+                  return TGL_Buffer_Trans_DP_HBR;
+               end if;
+            end if;
+         else
+            if eDP then
+               if Link.Bandwidth > DP_Bandwidth_5_4 then
+                  return ADL_Buffer_Trans_EDP_HBR3;
+               else
+                  return ADL_Buffer_Trans_DP_HBR; -- EDP_HBR2 ?
+               end if;
+            else
+	       if Link.Bandwidth > DP_Bandwidth_2_7 then
+	          return ADL_Buffer_Trans_DP_HBR3;
+               else
+                  return ADL_Buffer_Trans_DP_HBR;
+	       end if;
+	    end if;
+         end if;
+      end Get_Buf_Trans_Table;
+        
       function To_Buf_Trans_Index
          (Set : DP_Info.Train_Set) return Buffer_Trans_DP_Range
       is
@@ -442,23 +533,7 @@ package body HW.GFX.GMA.Connectors.Combo_Phy is
          Mask     => DDI_BUF_CTL_BUFFER_ENABLE,
          Result   => Was_Enabled);
 
-      if eDP then
-         if Link.Bandwidth > DP_Bandwidth_5_4 then
-            Buf_Trans := Buffer_Trans_DP_HBR2_EDP_HBR3 (Entry_Index);
-         else
-            Buf_Trans := Buffer_Trans_DP_HBR (Entry_Index);
-         end if;
-      else
-         if Link.Bandwidth > DP_Bandwidth_2_7 then
-            if Config.Is_LP then
-               Buf_Trans := Buffer_Trans_DP_HBR2_U_Y (Entry_Index);
-           else
-               Buf_Trans := Buffer_Trans_DP_HBR2 (Entry_Index);
-            end if;
-         else
-            Buf_Trans := Buffer_Trans_DP_HBR (Entry_Index);
-         end if;
-      end if;
+      Buf_Trans := Get_Buf_Trans_Table (eDP, Link.Bandwidth) (Entry_Index);
 
       Set_Vswing_And_Deemphasis
         (Port,

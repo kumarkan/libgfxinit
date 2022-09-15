@@ -321,6 +321,7 @@ package body HW.GFX.GMA.Transcoder is
    is
       Trans : Transcoder_Regs renames
                Transcoders (Get_Idx (Pipe, Port_Cfg.Port));
+      PIPE_ARB_USE_PROG_SLOTS : constant := 1 * 2 ** 13;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
       if not Config.Need_Early_Transcoder_Setup then
@@ -331,6 +332,12 @@ package body HW.GFX.GMA.Transcoder is
          Registers.Set_Mask
            (Register => Trans.DDI_FUNC_CTL,
             Mask     => DDI_FUNC_CTL_ENABLE);
+      end if;
+
+      if Config.Need_Pipe_Arb_Slots then
+         Registers.Set_Mask
+	   (Register => Trans.PIPE_ARB_CTL,
+	    Mask     => PIPE_ARB_USE_PROG_SLOTS);
       end if;
 
       Registers.Write

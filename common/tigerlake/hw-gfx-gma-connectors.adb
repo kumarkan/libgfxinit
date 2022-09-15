@@ -28,7 +28,6 @@ with HW.Debug;
 with GNAT.Source_Info;
 
 package body HW.GFX.GMA.Connectors is
-   DARBF_GATING_DIS            : constant := 1 * 2 ** 27;
 
    type Pipe_Regs is array (Pipe_Index) of Registers.Registers_Index;
    DP_TP_CTL : constant Pipe_Regs := Pipe_Regs'
@@ -295,9 +294,6 @@ package body HW.GFX.GMA.Connectors is
       Port : constant TGL_Digital_Port := Port_Cfg.Port;
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
-
-      -- Display WA #1185 WaDisableDARBFClkGating
-      Registers.Set_Mask (Registers.GEN9_CLKGATE_DIS_0, DARBF_GATING_DIS);
 
       Map_PLL_To_Port (Port, PLL_Hint);
 

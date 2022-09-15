@@ -91,19 +91,19 @@ package body HW.GFX.GMA.PLLs.Combo_Phy is
          QDiv_Mode    => 0,
          QDiv_Ratio   => 0),
       DP_Bandwidth_2_7 =>
-         (DCO_Integer  => 16#151#,
-          DCO_Fraction => 16#4000#,
-          PDiv         => 2,
-          KDiv         => 2,
-          QDiv_Mode    => 0,
-          QDiv_Ratio   => 0),
+        (DCO_Integer  => 16#151#,
+         DCO_Fraction => 16#4000#,
+         PDiv         => 2,
+         KDiv         => 2,
+         QDiv_Mode    => 0,
+         QDiv_Ratio   => 0),
       DP_Bandwidth_1_62 =>
-         (DCO_Integer  => 16#151#,
-          DCO_Fraction => 16#4000#,
-          PDiv         => 2,
-          KDiv         => 2,
-          QDiv_Mode    => 0,
-          QDiv_Ratio   => 0));
+        (DCO_Integer  => 16#151#,
+         DCO_Fraction => 16#4000#,
+         PDiv         => 2,
+         KDiv         => 2,
+         QDiv_Mode    => 0,
+         QDiv_Ratio   => 0));
 
    procedure Calc_DP_PLL_Dividers
      (PLL       : in     T;

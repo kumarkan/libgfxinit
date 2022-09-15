@@ -91,6 +91,9 @@ package body HW.GFX.GMA.Pipe_Setup is
         (Cursor_64x64   => 16#27#,
          Cursor_128x128 => 16#22#,
          Cursor_256x256 => 16#23#));
+   subtype ARB_SLOTS is natural range 0 .. 7;
+   function MCURSOR_ARB_SLOTS (N : ARB_SLOTS) return Word32 is
+      (Shift_Left (Word32 (N), 28));
 
    function CUR_POS_Y (Y : Int32) return Word32 is
      ((if Y >= 0 then 0 else 1 * 2 ** 31) or Shift_Left (Word32 (abs Y), 16))
@@ -421,7 +424,7 @@ package body HW.GFX.GMA.Pipe_Setup is
          Registers.Write
            (Register => Controller.PIPEMISC,
             Value    => Transcoder.BPC_Conf (Dither_BPC, Dither) or
-	                (if Config.Has_TGL_Plane_Control then 1 * 2 ** 8 else 0)); -- PIPEMISC_PIXEL_ROUNDING_TRUNC
+	                (if Config.Has_TGL_Plane_Control then 16#0080_0100# else 0)); -- PIPEMISC_PIXEL_ROUNDING_TRUNC or HDR_MODE (bit 8 & 23)
       end if;
    end Setup_Display;
 
@@ -437,8 +440,10 @@ package body HW.GFX.GMA.Pipe_Setup is
       -- so keep it first
       Registers.Write
         (Register => Cursors (Pipe).CTL,
-         Value    => CUR_CTL_PIPE_SELECT (Pipe) or
-                     CUR_CTL_MODE (Cursor.Mode, Cursor.Size));
+         Value    => CUR_CTL_MODE (Cursor.Mode, Cursor.Size) or
+	             (if Config.Need_Pipe_Arb_Slots
+	              then MCURSOR_ARB_SLOTS (1)
+		      else CUR_CTL_PIPE_SELECT (Pipe)));
       Place_Cursor (Pipe, FB, Cursor);
    end Update_Cursor;
 

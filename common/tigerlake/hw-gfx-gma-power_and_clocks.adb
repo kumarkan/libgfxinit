@@ -36,7 +36,24 @@ package body HW.GFX.GMA.Power_And_Clocks is
    DBUF_CTL_DBUF_POWER_REQUEST                    : constant := 1 * 2 ** 31;
    DBUF_CTL_TRACKER_STATE_SERVICE_MASK            : constant := 16#f8_0000#;
    DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT           : constant := 19;
+   DBUF_CTL_MIN_TRACKER_STATE_SERVICE_SHIFT       : constant := 16;
+   DBUF_CTL_MIN_TRACKER_STATE_SERVICE_MASK        : constant := 16#7_0000#;
    DBUF_CTL_DBUF_POWER_STATE                      : constant := 1 * 2 ** 30;
+
+   type DBUF_Regs_Array is array (natural range 0 .. 3) of Registers.Registers_Index;
+   DBUF_Regs : constant DBUF_Regs_Array :=
+      DBUF_Regs_Array'
+     (Registers.DBUF_CTL_S0,
+      Registers.DBUF_CTL_S1,
+      Registers.DBUF_CTL_S2,
+      Registers.DBUF_CTL_S3);
+
+   MBUS_JOIN                                      : constant := 1 * 2 ** 31;
+   MBUS_HASHING_MODE_MASK                         : constant := 1 * 2 ** 30;
+   MBUS_HASHING_MODE_2x2                          : constant := 0 * 2 ** 30;
+   MBUS_HASHING_MODE_1x4                          : constant := 1 * 2 ** 30;
+   MBUS_JOIN_PIPE_SELECT_MASK                     : constant := 16#1c00_0000#;
+   MBUS_JOIN_PIPE_SELECT_NONE                     : constant := 16#1c00_0000#;
 
    ----------------------------------------------------------------------------
 
@@ -512,11 +529,6 @@ package body HW.GFX.GMA.Power_And_Clocks is
          Registers.Set_Mask (Registers.GEN9_CLKGATE_DIS_0, DARBF_GATING_DIS);         
       end if;
 
-      -- yet another w/a
-      Registers.Set_Mask
-        (Register => Registers.GEN10_DFR_RATIO_EN_AND_CHICKEN,
-	 Mask     => 1 * 2 ** 9); --DFR_DISABLE);
-
       Registers.Set_Mask
         (Register => Registers.NDE_RSTWRN_OPT,
          Mask     => NDE_RSTWRN_OPT_RST_PCH_Handshake_En);
@@ -537,21 +549,40 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
       Get_RawClk (Config.Raw_Clock);
 
-      if not Config.Has_CDClk_PLL_Crawl then
+      if Config.Has_CDClk_PLL_Crawl then
          Registers.Unset_And_Set_Mask
-           (Register => Registers.DBUF_CTL,
+           (Register   => Registers.MBUS_CTL,
+            Mask_Unset => MBUS_HASHING_MODE_MASK or
+                          MBUS_JOIN or
+                          MBUS_JOIN_PIPE_SELECT_MASK,
+            Mask_Set   => MBUS_HASHING_MODE_1x4 or
+                          MBUS_JOIN or
+                          MBUS_JOIN_PIPE_SELECT_NONE);
+
+         Registers.Unset_And_Set_Mask
+           (Register   => Registers.DBUF_CTL_S0,
+            Mask_Unset => DBUF_CTL_MIN_TRACKER_STATE_SERVICE_MASK,
+            Mask_Set   =>
+               Shift_Left (3, DBUF_CTL_MIN_TRACKER_STATE_SERVICE_SHIFT));
+      else
+         Registers.Unset_And_Set_Mask
+           (Register   => Registers.DBUF_CTL_S0,
             Mask_Unset => DBUF_CTL_TRACKER_STATE_SERVICE_MASK,
             Mask_Set   => Shift_Left (8, DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT));
-         Registers.Unset_And_Set_Mask
-           (Register => Registers.DBUF_CTL_S2,
-            Mask_Unset => DBUF_CTL_TRACKER_STATE_SERVICE_MASK,
-            Mask_Set   => Shift_left (8, DBUF_CTL_TRACKER_STATE_SERVICE_SHIFT));
       end if;
 
-      -- Enable first DBUF slice
-      Registers.Set_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_REQUEST);
-      Registers.Posting_Read (Registers.DBUF_CTL);
-      Registers.Wait_Set_Mask (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_STATE);
+      -- Enable required DBUF slices
+      Registers.Set_Mask (Registers.DBUF_CTL_S0, DBUF_CTL_DBUF_POWER_REQUEST);
+      Registers.Posting_Read (Registers.DBUF_CTL_S0);
+      Registers.Wait_Set_Mask (Registers.DBUF_CTL_S0, DBUF_CTL_DBUF_POWER_STATE);
+
+      if Config.Has_CDClk_PLL_Crawl then
+         for I in 1 .. 3 loop
+            Registers.Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_REQUEST);
+            Registers.Posting_Read (DBUF_Regs (I));
+            Registers.Wait_Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_STATE);
+         end loop;
+      end if;
 
       if not Config.Has_CDClk_PLL_Crawl then
          for I in MBUS_ABOX_CTL'Range loop
@@ -568,9 +599,9 @@ package body HW.GFX.GMA.Power_And_Clocks is
       Registers.Set_Mask
         (Register => Registers.GEN11_CHICKEN_DCPR_2,
          Mask     => DCPR_MASK_MAXLATENCY_MEMUP_CLR or
-	             DCPR_MASK_LPMODE or
+                     DCPR_MASK_LPMODE or
                      DCPR_SEND_RESP_IMM or
-		     DCPR_CLEAR_MEMSTAT_DIS);
+                     DCPR_CLEAR_MEMSTAT_DIS);
 
       if Config.Has_CDClk_PLL_Crawl then
          Registers.Write
@@ -591,8 +622,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
    procedure Update_CDClk (Configs : in out Pipe_Configs)
    is
-      New_CDClk : constant Frequency_Type :=
-         Config_Helpers.Highest_Dotclock (Configs);
+      New_CDClk : constant Frequency_Type := Normalize_CDClk
+         (Div_Round_Up (Config_Helpers.Highest_Dotclock (Configs), 2));
    begin
       Set_CDClk (New_CDClk);
       Config_Helpers.Limit_Dotclocks (Configs, Config.CDClk);
@@ -655,10 +686,12 @@ package body HW.GFX.GMA.Power_And_Clocks is
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
-      Registers.Unset_Mask
-         (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_REQUEST);
-      Registers.Wait_Unset_Mask
-         (Registers.DBUF_CTL, DBUF_CTL_DBUF_POWER_STATE);
+      for I in reverse DBUF_Regs'Range loop
+         Registers.Unset_Mask
+            (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_REQUEST);
+         Registers.Wait_Unset_Mask
+            (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_STATE);
+      end loop;
 
       -- Disable CD clock, bypass frequency is Refclk / 2
       Get_Refclk (Refclk);

@@ -61,6 +61,15 @@ package body HW.GFX.GMA.Transcoder is
     when DDI_TC5 => 8 * 2 ** 28,
     when DDI_TC6 => 9 * 2 ** 28,
     when others  => 0);
+   function ADL_TRANS_CLK_SEL_PORT (Port : TGL_Digital_Port) return Word32 is
+   (case Port is
+    when DIGI_A  => 1 * 2 ** 28,
+    when DIGI_B  => 2 * 2 ** 28,
+    when DDI_TC1 => 6 * 2 ** 28,
+    when DDI_TC2 => 7 * 2 ** 28,
+    when DDI_TC3 => 8 * 2 ** 28,
+    when DDI_TC4 => 9 * 2 ** 28,
+    when others  => 0);
 
    TRANS_CONF_ENABLE          : constant := 1 * 2 ** 31;
    TRANS_CONF_ENABLED_STATUS  : constant := 1 * 2 ** 30;
@@ -268,7 +277,9 @@ package body HW.GFX.GMA.Transcoder is
          Registers.Unset_And_Set_Mask
            (Register   => Trans.CLK_SEL,
             Mask_Unset => 16#f000_0000#,
-            Mask_Set   => TGL_TRANS_CLK_SEL_PORT (Port_Cfg.Port));
+            Mask_Set   => (if Config.Has_4_Type_C_Ports
+	                   then TGL_TRANS_CLK_SEL_PORT (Port_Cfg.Port)
+			   else ADL_TRANS_CLK_SEL_PORT (Port_Cfg.Port)));
       end if;
    end Enable_Pipe_Clock;
 

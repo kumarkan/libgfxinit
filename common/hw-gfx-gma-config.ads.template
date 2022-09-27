@@ -249,7 +249,7 @@ private package HW.GFX.GMA.Config is
    Can_Switch_CDClk              : <hswbool> := Broadwell_On;
    Has_Fractional_RawClk         : <genbool> := Cannon_Point_On;
    Has_CDClk_PLL_Crawl           : <tglbool> := Alderlake_On;
-   Has_New_Type_C_PLL_Enable     : <tglbool> := Alderlake_On;
+   Has_Old_Type_C_PLL_Enable     : <tglbool> := CPU_Tigerlake;
 
    ----------- DDI: -------------
    End_EDP_Training_Late         : <genbool> := Gen_Haswell;
@@ -303,6 +303,7 @@ private package HW.GFX.GMA.Config is
    ----------- Transcoder -------
    Need_Early_Transcoder_Setup   : <genbool> := Tigerlake_On;
    Need_Pipe_Arb_Slots           : <tglbool> := Alderlake_On;
+   Has_4_Type_C_Ports            : <tglbool> := Alderlake_On;
 
    ----------- Planes -----------
    Has_Mbus_Dbox_Credits         : <genbool> := Tigerlake_On;

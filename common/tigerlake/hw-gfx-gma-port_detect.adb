@@ -123,6 +123,9 @@ is
             if G in USBC_Port then
                Connectors.TC.Connect (G, Success);
                Config.Valid_Port (Port) := Success;
+	       if Success then
+                  pragma Debug (Debug.Put_Line ("Type-C port connected"));
+	       end if;
             end if;
          end;
       end loop;

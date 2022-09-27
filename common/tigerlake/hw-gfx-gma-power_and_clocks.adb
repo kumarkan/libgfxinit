@@ -572,12 +572,15 @@ package body HW.GFX.GMA.Power_And_Clocks is
       end if;
 
       -- Enable required DBUF slices
-      Registers.Set_Mask (Registers.DBUF_CTL_S0, DBUF_CTL_DBUF_POWER_REQUEST);
-      Registers.Posting_Read (Registers.DBUF_CTL_S0);
-      Registers.Wait_Set_Mask (Registers.DBUF_CTL_S0, DBUF_CTL_DBUF_POWER_STATE);
+      for I in 0 .. 1 loop
+         Registers.Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_REQUEST);
+         Registers.Posting_Read (DBUF_Regs (I));
+         Registers.Wait_Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_STATE);
+      end loop;
 
+      -- ADL-P basically requires all 4 dbuf slices
       if Config.Has_CDClk_PLL_Crawl then
-         for I in 1 .. 3 loop
+         for I in 2 .. 3 loop
             Registers.Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_REQUEST);
             Registers.Posting_Read (DBUF_Regs (I));
             Registers.Wait_Set_Mask (DBUF_Regs (I), DBUF_CTL_DBUF_POWER_STATE);

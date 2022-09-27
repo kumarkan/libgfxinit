@@ -52,8 +52,10 @@ package body HW.GFX.GMA.Power_And_Clocks.XELPD is
    HIP_INDEX_REG : constant Registers.Registers_Index := Registers.HIP_INDEX_REG0;
    function HIP_INDEX_VAL (A : AUX_USBC_Domain; Val : Word32) return Word32 is
      (case A is
-      when AUX_USBC1 | AUX_USBC3 => Val,
-      when AUX_USBC2 | AUX_USBC4 => Shift_Left (Val, 8));
+      when AUX_USBC1 => Val * 2 ** 0,
+      when AUX_USBC2 => Val * 2 ** 8,
+      when AUX_USBC3 => Val * 2 ** 16,
+      when AUX_USBC4 => Val * 2 ** 24);
 
    type DKL_Regs is array (AUX_USBC_Domain) of Registers.Registers_Index;
    DKL_CMN_UC_DW_27 : constant DKL_Regs := DKL_Regs'
@@ -94,16 +96,16 @@ package body HW.GFX.GMA.Power_And_Clocks.XELPD is
               when PWD       => 8,
               when AUX_A     => 0,
               when AUX_B     => 1,
-              when AUX_USBC1 => 5,
-              when AUX_USBC2 => 6,
-              when AUX_USBC3 => 7,
-              when AUX_USBC4 => 8,
+              when AUX_USBC1 => 3,
+              when AUX_USBC2 => 4,
+              when AUX_USBC3 => 5,
+              when AUX_USBC4 => 6,
               when DDI_A     => 0,
               when DDI_B     => 1,
-              when DDI_USBC1 => 5,
-              when DDI_USBC2 => 6,
-              when DDI_USBC3 => 7,
-              when DDI_USBC4 => 8));
+              when DDI_USBC1 => 3,
+              when DDI_USBC2 => 4,
+              when DDI_USBC3 => 5,
+              when DDI_USBC4 => 6));
    end Power_State_Mask;
 
    function Power_Request_Mask (PD : Power_Domain) return Word32 is
@@ -186,8 +188,8 @@ package body HW.GFX.GMA.Power_And_Clocks.XELPD is
          Registers.Set_Mask (PWR_CTL_DRIVER (PD_Type), Power_Request_Mask (PD));
          Registers.Wait_Set_Mask
            (Register => PWR_CTL_DRIVER (PD_Type),
-            Mask => Power_State_Mask (PD),
-            Success => Success);
+            Mask     => Power_State_Mask (PD),
+            Success  => Success);
 
          if not Success then
             if PD in AUX_USBC_Domain then

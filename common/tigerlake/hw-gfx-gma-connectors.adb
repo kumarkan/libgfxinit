@@ -54,13 +54,7 @@ package body HW.GFX.GMA.Connectors is
    DP_TP_STATUS_MIN_IDLES_SENT      : constant := 1 * 2 ** 25;
 
    DDI_BUF_CTL_BUFFER_ENABLE        : constant :=      1 * 2 ** 31;
-   DDI_BUF_CTL_PORT_WIDTH_MASK      : constant :=      7 * 2 **  1;
-   DDI_BUF_CTL_PORT_WIDTH_1_LANE    : constant :=      0 * 2 **  1;
-   DDI_BUF_CTL_PORT_WIDTH_2_LANES   : constant :=      1 * 2 **  1;
-   DDI_BUF_CTL_PORT_WIDTH_4_LANES   : constant :=      3 * 2 **  1;
-   DDI_BUF_CTL_PORT_REVERSAL        : constant :=      1 * 2 ** 16;
    DDI_BUF_CTL_IDLE_STATUS          : constant :=      1 * 2 **  7;
-   DDI_BUF_CTL_TRANS_SELECT_MASK    : constant := 16#f#  * 2 ** 24;
 
    type DDI_CLK_SEL_Shift_Array is array (Combo_Port) of Natural;
    DDI_CLK_SEL_SHIFT : constant DDI_CLK_SEL_Shift_Array :=
@@ -310,11 +304,11 @@ package body HW.GFX.GMA.Connectors is
          Transcoder.Configure (Pipe, Port_Cfg, False);
 
          Training.Train_DP
-              (Pipe    => Pipe,
-               Port    => Port,
-               Link    => Port_Cfg.DP,
-               eDP     => Port_Cfg.Is_eDP,
-               Success => Success);
+           (Pipe    => Pipe,
+            Port    => Port,
+            Link    => Port_Cfg.DP,
+            eDP     => Port_Cfg.Is_eDP,
+            Success => Success);
       elsif Port_Cfg.Display = HDMI then
          Transcoder.Enable_Pipe_Clock (Pipe, Port_Cfg);
          Transcoder.Configure (Pipe, Port_Cfg, False);

@@ -31,8 +31,12 @@ package body HW.GFX.GMA.Connectors.TC is
 
    function HIP_INDEX_VAL (P : USBC_Port; Val : Word32) return Word32 is
      (case P is
-      when DDI_TC1 | DDI_TC3 | DDI_TC5 => Val * 2 ** 0,
-      when DDI_TC2 | DDI_TC4 | DDI_TC6 => Val * 2 ** 8);
+      when DDI_TC1 => Shift_Left (Val, 0),
+      when DDI_TC2 => Shift_Left (Val, 8),
+      when DDI_TC3 => Shift_Left (Val, 16),
+      when DDI_TC4 => Shift_Left (Val, 24),
+      when DDI_TC5 => Shift_Left (Val, 0),
+      when DDI_TC6 => Shift_Left (Val, 8));
 
    type Port_Regs_Array is array (USBC_Port) of Registers.Registers_Index;
    DKL_DP_MODE : constant Port_Regs_Array :=
@@ -518,7 +522,8 @@ package body HW.GFX.GMA.Connectors.TC is
 
    procedure Set_Vswing_And_Deemphasis
       (Port      : USBC_Port;
-       Buf_Trans : Buffer_Trans)
+       Buf_Trans : Buffer_Trans;
+       Is_HDMI   : Boolean)
    is
       -- Preshoot Coeff, Deemphasis Coeff, VSwing Control,
       DPcnt_Mask : constant Word32 := 16#3_ff07#;
@@ -550,18 +555,18 @@ package body HW.GFX.GMA.Connectors.TC is
             declare
                Val : Word32;
             begin
-               -- if Port in USBC1_HDMI .. USBC6_HDMI then
-               --    if Lane = 0 then
-               --       Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (0) or
-               --              DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (2);
-               --    else
-               --       Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (3) or
-               --              DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (3);
-               --    end if;
-               -- else
+               if Is_HDMI then
+                  if Lane = 0 then
+                     Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (0) or
+                            DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (2);
+                  else
+                     Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (3) or
+                            DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (3);
+                  end if;
+               else
                   Val := DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX1 (3) or
                          DKL_TX_DPCNTL2_CFG_LOADGENSELECT_TX2 (3);
-               -- end if;
+               end if;
 
                Registers.Unset_And_Set_Mask
                  (Register   => Vswing_Regs (Port).DKL_TX_DPCNTL2,
@@ -619,6 +624,16 @@ package body HW.GFX.GMA.Connectors.TC is
       Buf_Trans : Buffer_Trans;
       Entry_Index : constant Buffer_Trans_Range :=
          To_Buf_Trans_Index (Train_Set);
+
+      DDI_BUF_CTL_PHY_LINK_RATE_MASK : constant := 16#70_0000#;
+      function DDI_BUF_CTL_PHY_LINK_RATE (Bandwidth : DP_Bandwidth)
+      return Word32
+      is (if Config.Need_TC_PHY_Ownership
+          then (case Bandwidth is
+	        when DP_Bandwidth_1_62 => 16#00_0000#,
+		when DP_Bandwidth_2_7  => 16#10_0000#,
+		when DP_Bandwidth_5_4  => 16#20_0000#)
+	  else 0);
    begin
       pragma Debug (Debug.Put_Line (GNAT.Source_Info.Enclosing_Entity));
 
@@ -641,7 +656,7 @@ package body HW.GFX.GMA.Connectors.TC is
          end if;
       end if;
 
-      Set_Vswing_And_Deemphasis (Port, Buf_Trans);
+      Set_Vswing_And_Deemphasis (Port, Buf_Trans, False);
 
       if Config.Need_DP_Alt_Switch and not Was_Enabled then
          for Lane in 0 .. 1 loop
@@ -656,11 +671,12 @@ package body HW.GFX.GMA.Connectors.TC is
         (Register    => DDI_BUF_CTL (Port),
          Mask_Unset  => DDI_BUF_CTL_TRANS_SELECT_MASK or
                         DDI_BUF_CTL_PORT_REVERSAL or
-                        DDI_BUF_CTL_PORT_WIDTH_MASK,
+                        DDI_BUF_CTL_PORT_WIDTH_MASK or
+			DDI_BUF_CTL_PHY_LINK_RATE_MASK,
          Mask_Set    => DDI_BUF_CTL_BUFFER_ENABLE or
                         DDI_BUF_CTL_PORT_WIDTH (Link.Lane_Count) or
-                        (if Config.Need_TC_PHY_Ownership
-                         then DDI_BUF_CTL_TC_PHY_OWNERSHIP else 0));
+			DDI_BUF_CTL_PHY_LINK_RATE (Link.Bandwidth) or
+			DDI_BUF_CTL_TC_PHY_OWNERSHIP);
       Registers.Posting_Read (DDI_BUF_CTL (Port));
 
       if not Was_Enabled then
@@ -675,7 +691,7 @@ package body HW.GFX.GMA.Connectors.TC is
          Buffer_Trans_HDMI (Buffer_Trans_HDMI'Last);
    begin
       Program_DP_Mode (Port, HDMI_Lane_Count);
-      Set_Vswing_And_Deemphasis (Port, Buf_Trans);
+      Set_Vswing_And_Deemphasis (Port, Buf_Trans, True);
    end Enable_HDMI;
 
 end HW.GFX.GMA.Connectors.TC;

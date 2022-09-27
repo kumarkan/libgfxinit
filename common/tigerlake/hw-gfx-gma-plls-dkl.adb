@@ -55,9 +55,9 @@ package body HW.GFX.GMA.PLLs.DKL is
    PLL_Regs : constant PLL_Regs_Array :=
       PLL_Regs_Array'
      (TCPLL1 =>
-        ((if Config.Has_New_Type_C_PLL_Enable
-	  then Registers.PORTTC_PLL_ENABLE_1
-	  else Registers.MGPLL1_ENABLE),
+        ((if Config.Has_Old_Type_C_PLL_Enable
+	  then Registers.MGPLL1_ENABLE
+	  else Registers.PORTTC_PLL_ENABLE_1),
          Registers.DKL_REFCLKIN_CTL_1,
          Registers.DKL_CLKTOP2_CCC1_1,
          Registers.DKL_CLKTOP2_HSCC_1,
@@ -67,9 +67,9 @@ package body HW.GFX.GMA.PLLs.DKL is
          Registers.DKL_PLL_BIAS_1,
          Registers.DKL_PLL_COLD_BIAS_1),
       TCPLL2 =>
-        ((if Config.Has_New_Type_C_PLL_Enable
-	  then Registers.PORTTC_PLL_ENABLE_2
-	  else Registers.MGPLL2_ENABLE),
+        ((if Config.Has_Old_Type_C_PLL_Enable
+	  then Registers.MGPLL2_ENABLE
+	  else Registers.PORTTC_PLL_ENABLE_2),
          Registers.DKL_REFCLKIN_CTL_2,
          Registers.DKL_CLKTOP2_CCC1_2,
          Registers.DKL_CLKTOP2_HSCC_2,
@@ -79,9 +79,9 @@ package body HW.GFX.GMA.PLLs.DKL is
          Registers.DKL_PLL_BIAS_2,
          Registers.DKL_PLL_COLD_BIAS_2),
       TCPLL3 =>
-        ((if Config.Has_New_Type_C_PLL_Enable
-	  then Registers.PORTTC_PLL_ENABLE_3
-	  else Registers.MGPLL3_ENABLE),
+        ((if Config.Has_Old_Type_C_PLL_Enable
+	  then Registers.MGPLL3_ENABLE
+	  else Registers.PORTTC_PLL_ENABLE_3),
          Registers.DKL_REFCLKIN_CTL_3,
          Registers.DKL_CLKTOP2_CCC1_3,
          Registers.DKL_CLKTOP2_HSCC_3,
@@ -91,9 +91,9 @@ package body HW.GFX.GMA.PLLs.DKL is
          Registers.DKL_PLL_BIAS_3,
          Registers.DKL_PLL_COLD_BIAS_3),
       TCPLL4 =>
-        ((if Config.Has_New_Type_C_PLL_Enable
-	  then Registers.PORTTC_PLL_ENABLE_4
-	  else Registers.MGPLL4_ENABLE),
+        ((if Config.Has_Old_Type_C_PLL_Enable
+	  then Registers.MGPLL4_ENABLE
+	  else Registers.PORTTC_PLL_ENABLE_4),
          Registers.DKL_REFCLKIN_CTL_4,
          Registers.DKL_CLKTOP2_CCC1_4,
          Registers.DKL_CLKTOP2_HSCC_4,

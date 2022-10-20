@@ -185,24 +185,24 @@ is
                   PLL_Hint    => PLLs.Register_Value (Allocated_PLLs (Pipe)),
                   Success     => Success);
 
-               if Success then
-                  Display_Controller.On
-                    (Pipe        => Pipe,
-                     Port_Cfg    => Port_Cfg,
-                     Framebuffer => Pipe_Cfg.Framebuffer,
-                     Cursor      => Pipe_Cfg.Cursor);
+               --  if Success then
+               Display_Controller.On
+                 (Pipe        => Pipe,
+                  Port_Cfg    => Port_Cfg,
+                  Framebuffer => Pipe_Cfg.Framebuffer,
+                  Cursor      => Pipe_Cfg.Cursor);
 
-                  Connectors.Post_On
-                    (Pipe     => Pipe,
-                     Port_Cfg => Port_Cfg,
-                     PLL_Hint => PLLs.Register_Value (Allocated_PLLs (Pipe)),
-                     Success  => Success);
+               Connectors.Post_On
+                 (Pipe     => Pipe,
+                  Port_Cfg => Port_Cfg,
+                  PLL_Hint => PLLs.Register_Value (Allocated_PLLs (Pipe)),
+                  Success  => Success);
 
-                  if not Success then
-                     Display_Controller.Off (Pipe);
-                     Connectors.Post_Off (Port_Cfg);
-                  end if;
-               end if;
+               --     if not Success then
+               --        Display_Controller.Off (Pipe);
+               --        Connectors.Post_Off (Port_Cfg);
+               --     end if;
+               --  end if;
 
                exit when Success;
             end loop;

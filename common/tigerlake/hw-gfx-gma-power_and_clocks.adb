@@ -323,8 +323,8 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
       if not Success then
          pragma Debug (Debug.Put_Line
-                       ("ERROR: PCODE not ready for frequency change."));
-         return;
+                       ("ERROR: J2M: PCODE not ready for frequency change."));
+         --  return;
       end if;
 
       if Config.Has_CDClk_PLL_Crawl then
@@ -368,7 +368,7 @@ package body HW.GFX.GMA.Power_And_Clocks is
 
       if not Success then
          Debug.Put_Line ("CDClk PLL failed to lock!");
-         return;
+         --  return;
       end if;
 
       VCO := (Refclk_Freq / 1_000) * Frequency_Type (PLL_Ratio);

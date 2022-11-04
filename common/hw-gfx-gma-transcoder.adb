@@ -206,23 +206,23 @@ package body HW.GFX.GMA.Transcoder is
          Link_N   => Link_N);
 
       Registers.Write
-        (Register => Trans.DATA_M1,
+        (Register => Registers.PIPEA_DATA_M1,
          Value    => TRANS_DATA_M_TU (64) or
                      Word32 (Data_M));
       Registers.Write
-        (Register => Trans.DATA_N1,
+        (Register => Registers.PIPEA_DATA_N1,
          Value    => Word32 (Data_N));
 
       Registers.Write
-        (Register => Trans.LINK_M1,
+        (Register => Registers.PIPEA_LINK_M1,
          Value    => Word32 (Link_M));
       Registers.Write
-        (Register => Trans.LINK_N1,
+        (Register => Registers.PIPEA_LINK_N1,
          Value    => Word32 (Link_N));
 
       if Config.Has_Pipe_MSA_Misc then
          Registers.Write
-           (Register => Trans.MSA_MISC,
+           (Register => Registers.PIPEA_MSA_MISC,
             Value    => TRANS_MSA_MISC_SYNC_CLK or
                         TRANS_MSA_MISC_BPC (Mode.BPC));
       end if;
@@ -258,12 +258,12 @@ package body HW.GFX.GMA.Transcoder is
          Setup_Link (Trans, Port_Cfg.DP, Port_Cfg.Mode);
       end if;
 
-      Registers.Write (Trans.HTOTAL,   Encode (M.H_Visible,    M.H_Total));
-      Registers.Write (Trans.HBLANK,   Encode (M.H_Visible,    M.H_Total));
-      Registers.Write (Trans.HSYNC,    Encode (M.H_Sync_Begin, M.H_Sync_End));
-      Registers.Write (Trans.VTOTAL,   Encode (M.V_Visible,    M.V_Total));
-      Registers.Write (Trans.VBLANK,   Encode (M.V_Visible,    M.V_Total));
-      Registers.Write (Trans.VSYNC,    Encode (M.V_Sync_Begin, M.V_Sync_End));
+      Registers.Write (Registers.HTOTAL_A,   Encode (M.H_Visible,    M.H_Total));
+      Registers.Write (Registers.HBLANK_A,   Encode (M.H_Visible,    M.H_Total));
+      Registers.Write (Registers.HSYNC_A,    Encode (M.H_Sync_Begin, M.H_Sync_End));
+      Registers.Write (Registers.VTOTAL_A,   Encode (M.V_Visible,    M.V_Total));
+      Registers.Write (Registers.VBLANK_A,   Encode (M.V_Visible,    M.V_Total));
+      Registers.Write (Registers.VSYNC_A,    Encode (M.V_Sync_Begin, M.V_Sync_End));
    end Setup;
 
    ----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ package body HW.GFX.GMA.Transcoder is
    begin
       if Config.Need_Early_Transcoder_Setup then
          Registers.Unset_And_Set_Mask
-           (Register   => Trans.CLK_SEL,
+           (Register   => Registers.TRANSA_CLK_SEL,
             Mask_Unset => 16#f000_0000#,
             Mask_Set   => (if Config.Has_4_Type_C_Ports
 	                   then TGL_TRANS_CLK_SEL_PORT (Port_Cfg.Port)
@@ -310,7 +310,7 @@ package body HW.GFX.GMA.Transcoder is
       if Config.Has_Pipe_DDI_Func then
          if Is_Digital_Port (Port_Cfg.Port) then
             Registers.Write
-              (Register => Trans.DDI_FUNC_CTL,
+              (Register => Registers.PIPEA_DDI_FUNC_CTL,
                Value    => DDI_Select or
                         DDI_FUNC_CTL_MODE_SELECT (Port_Cfg.Display) or
                         DDI_FUNC_CTL_BPC (Port_Cfg.Mode.BPC) or
@@ -341,22 +341,22 @@ package body HW.GFX.GMA.Transcoder is
 
       if Config.Has_Pipe_DDI_Func and Is_Digital_Port (Port_Cfg.Port) then
          Registers.Set_Mask
-           (Register => Trans.DDI_FUNC_CTL,
+           (Register => Registers.PIPEA_DDI_FUNC_CTL,
             Mask     => DDI_FUNC_CTL_ENABLE);
       end if;
 
       if Config.Need_Pipe_Arb_Slots then
          Registers.Set_Mask
-	   (Register => Trans.PIPE_ARB_CTL,
+	   (Register => Registers.PIPEA_ARB_CTL,
 	    Mask     => PIPE_ARB_USE_PROG_SLOTS);
       end if;
 
       Registers.Write
-        (Register => Trans.CONF,
+        (Register => Registers.PIPEACONF,
          Value    => TRANS_CONF_ENABLE or
                      (if not Config.Has_Pipeconf_Misc then
                         BPC_Conf (Port_Cfg.Mode.BPC, Dither) else 0));
-      Registers.Posting_Read (Trans.CONF);
+      Registers.Posting_Read (Registers.PIPEACONF);
    end On;
 
    ----------------------------------------------------------------------------
@@ -365,10 +365,10 @@ package body HW.GFX.GMA.Transcoder is
    is
       Enabled : Boolean;
    begin
-      Registers.Is_Set_Mask (Trans.CONF, TRANS_CONF_ENABLE, Enabled);
+      Registers.Is_Set_Mask (Registers.PIPEACONF, TRANS_CONF_ENABLE, Enabled);
 
       if Enabled then
-         Registers.Unset_Mask (Trans.CONF, TRANS_CONF_ENABLE);
+         Registers.Unset_Mask (Registers.PIPEACONF, TRANS_CONF_ENABLE);
       end if;
 
       -- Workaround for Broadwell:
@@ -376,7 +376,7 @@ package body HW.GFX.GMA.Transcoder is
       if not Config.Pipe_Enabled_Workaround or else Enabled then
          -- synchronously wait until pipe is truly off
          Registers.Wait_Unset_Mask
-           (Register => Trans.CONF,
+           (Register => Registers.PIPEACONF,
             Mask     => TRANS_CONF_ENABLED_STATUS,
             TOut_MS  => 40);
       end if;
